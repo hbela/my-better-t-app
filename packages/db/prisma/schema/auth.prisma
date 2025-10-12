@@ -1,28 +1,36 @@
 model User {
-  id            String    @id @map("_id")
-  name          String
-  email         String
-  emailVerified Boolean
-  image         String?
-  createdAt     DateTime
-  updatedAt     DateTime
-  sessions      Session[]
-  accounts      Account[]
+  id                  String     @id @map("_id")
+  name                String
+  email               String
+  emailVerified       Boolean
+  image               String?
+  createdAt           DateTime
+  updatedAt           DateTime
+  systemRole          String?    @default("USER")
+  banned              Boolean?   @default(false)
+  banReason           String?
+  banExpires          DateTime?
+  needsPasswordChange Boolean?   @default(false)
+  sessions            Session[]
+  accounts            Account[]
+  providers           Provider[]
+  bookings            Booking[]
 
   @@unique([email])
   @@map("user")
 }
 
 model Session {
-  id        String   @id @map("_id")
-  expiresAt DateTime
-  token     String
-  createdAt DateTime
-  updatedAt DateTime
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                   String   @id @map("_id")
+  expiresAt            DateTime
+  token                String
+  createdAt            DateTime
+  updatedAt            DateTime
+  ipAddress            String?
+  userAgent            String?
+  userId               String
+  activeOrganizationId String?
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([token])
   @@map("session")
@@ -56,4 +64,98 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model Organization {
+  id          String       @id @map("_id")
+  name        String
+  slug        String       @unique
+  logo        String?
+  enabled     Boolean      @default(false)
+  createdAt   DateTime
+  metadata    String?
+  members     Member[]
+  departments Department[]
+
+  @@map("organization")
+}
+
+model Member {
+  id             String       @id @map("_id")
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  email          String?
+  role           String
+  createdAt      DateTime
+
+  @@unique([organizationId, userId])
+  @@map("member")
+}
+
+model Invitation {
+  id             String   @id @map("_id")
+  organizationId String
+  email          String
+  role           String?
+  status         String
+  expiresAt      DateTime
+  inviterId      String
+
+  @@unique([email, organizationId])
+  @@map("invitation")
+}
+
+model Department {
+  id             String       @id @map("_id")
+  name           String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  providers      Provider[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("department")
+}
+
+model Provider {
+  id           String     @id @map("_id")
+  userId       String
+  departmentId String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  events       Event[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([userId, departmentId])
+  @@map("provider")
+}
+
+model Event {
+  id          String   @id @map("_id")
+  providerId  String
+  provider    Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  start       DateTime
+  end         DateTime
+  isBooked    Boolean  @default(false)
+  booking     Booking?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("event")
+}
+
+model Booking {
+  id        String   @id @map("_id")
+  eventId   String   @unique
+  memberId  String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  member    User     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("booking")
 }
