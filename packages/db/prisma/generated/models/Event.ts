@@ -19,8 +19,20 @@ export type EventModel = runtime.Types.Result.DefaultSelection<Prisma.$EventPayl
 
 export type AggregateEvent = {
   _count: EventCountAggregateOutputType | null
+  _avg: EventAvgAggregateOutputType | null
+  _sum: EventSumAggregateOutputType | null
   _min: EventMinAggregateOutputType | null
   _max: EventMaxAggregateOutputType | null
+}
+
+export type EventAvgAggregateOutputType = {
+  duration: number | null
+  price: number | null
+}
+
+export type EventSumAggregateOutputType = {
+  duration: number | null
+  price: number | null
 }
 
 export type EventMinAggregateOutputType = {
@@ -30,6 +42,8 @@ export type EventMinAggregateOutputType = {
   description: string | null
   start: Date | null
   end: Date | null
+  duration: number | null
+  price: number | null
   isBooked: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -42,6 +56,8 @@ export type EventMaxAggregateOutputType = {
   description: string | null
   start: Date | null
   end: Date | null
+  duration: number | null
+  price: number | null
   isBooked: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -54,12 +70,24 @@ export type EventCountAggregateOutputType = {
   description: number
   start: number
   end: number
+  duration: number
+  price: number
   isBooked: number
   createdAt: number
   updatedAt: number
   _all: number
 }
 
+
+export type EventAvgAggregateInputType = {
+  duration?: true
+  price?: true
+}
+
+export type EventSumAggregateInputType = {
+  duration?: true
+  price?: true
+}
 
 export type EventMinAggregateInputType = {
   id?: true
@@ -68,6 +96,8 @@ export type EventMinAggregateInputType = {
   description?: true
   start?: true
   end?: true
+  duration?: true
+  price?: true
   isBooked?: true
   createdAt?: true
   updatedAt?: true
@@ -80,6 +110,8 @@ export type EventMaxAggregateInputType = {
   description?: true
   start?: true
   end?: true
+  duration?: true
+  price?: true
   isBooked?: true
   createdAt?: true
   updatedAt?: true
@@ -92,6 +124,8 @@ export type EventCountAggregateInputType = {
   description?: true
   start?: true
   end?: true
+  duration?: true
+  price?: true
   isBooked?: true
   createdAt?: true
   updatedAt?: true
@@ -136,6 +170,18 @@ export type EventAggregateArgs<ExtArgs extends runtime.Types.Extensions.Internal
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: EventAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: EventSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: EventMinAggregateInputType
@@ -166,6 +212,8 @@ export type EventGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
   take?: number
   skip?: number
   _count?: EventCountAggregateInputType | true
+  _avg?: EventAvgAggregateInputType
+  _sum?: EventSumAggregateInputType
   _min?: EventMinAggregateInputType
   _max?: EventMaxAggregateInputType
 }
@@ -177,10 +225,14 @@ export type EventGroupByOutputType = {
   description: string | null
   start: Date
   end: Date
+  duration: number | null
+  price: number | null
   isBooked: boolean
   createdAt: Date
   updatedAt: Date
   _count: EventCountAggregateOutputType | null
+  _avg: EventAvgAggregateOutputType | null
+  _sum: EventSumAggregateOutputType | null
   _min: EventMinAggregateOutputType | null
   _max: EventMaxAggregateOutputType | null
 }
@@ -210,6 +262,8 @@ export type EventWhereInput = {
   description?: Prisma.StringNullableFilter<"Event"> | string | null
   start?: Prisma.DateTimeFilter<"Event"> | Date | string
   end?: Prisma.DateTimeFilter<"Event"> | Date | string
+  duration?: Prisma.IntNullableFilter<"Event"> | number | null
+  price?: Prisma.FloatNullableFilter<"Event"> | number | null
   isBooked?: Prisma.BoolFilter<"Event"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Event"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Event"> | Date | string
@@ -224,6 +278,8 @@ export type EventOrderByWithRelationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   start?: Prisma.SortOrder
   end?: Prisma.SortOrder
+  duration?: Prisma.SortOrderInput | Prisma.SortOrder
+  price?: Prisma.SortOrderInput | Prisma.SortOrder
   isBooked?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -241,6 +297,8 @@ export type EventWhereUniqueInput = Prisma.AtLeast<{
   description?: Prisma.StringNullableFilter<"Event"> | string | null
   start?: Prisma.DateTimeFilter<"Event"> | Date | string
   end?: Prisma.DateTimeFilter<"Event"> | Date | string
+  duration?: Prisma.IntNullableFilter<"Event"> | number | null
+  price?: Prisma.FloatNullableFilter<"Event"> | number | null
   isBooked?: Prisma.BoolFilter<"Event"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Event"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Event"> | Date | string
@@ -255,12 +313,16 @@ export type EventOrderByWithAggregationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   start?: Prisma.SortOrder
   end?: Prisma.SortOrder
+  duration?: Prisma.SortOrderInput | Prisma.SortOrder
+  price?: Prisma.SortOrderInput | Prisma.SortOrder
   isBooked?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.EventCountOrderByAggregateInput
+  _avg?: Prisma.EventAvgOrderByAggregateInput
   _max?: Prisma.EventMaxOrderByAggregateInput
   _min?: Prisma.EventMinOrderByAggregateInput
+  _sum?: Prisma.EventSumOrderByAggregateInput
 }
 
 export type EventScalarWhereWithAggregatesInput = {
@@ -273,6 +335,8 @@ export type EventScalarWhereWithAggregatesInput = {
   description?: Prisma.StringNullableWithAggregatesFilter<"Event"> | string | null
   start?: Prisma.DateTimeWithAggregatesFilter<"Event"> | Date | string
   end?: Prisma.DateTimeWithAggregatesFilter<"Event"> | Date | string
+  duration?: Prisma.IntNullableWithAggregatesFilter<"Event"> | number | null
+  price?: Prisma.FloatNullableWithAggregatesFilter<"Event"> | number | null
   isBooked?: Prisma.BoolWithAggregatesFilter<"Event"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Event"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Event"> | Date | string
@@ -284,6 +348,8 @@ export type EventCreateInput = {
   description?: string | null
   start: Date | string
   end: Date | string
+  duration?: number | null
+  price?: number | null
   isBooked?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -298,6 +364,8 @@ export type EventUncheckedCreateInput = {
   description?: string | null
   start: Date | string
   end: Date | string
+  duration?: number | null
+  price?: number | null
   isBooked?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -310,6 +378,8 @@ export type EventUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  price?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isBooked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -324,6 +394,8 @@ export type EventUncheckedUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  price?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isBooked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -337,6 +409,8 @@ export type EventCreateManyInput = {
   description?: string | null
   start: Date | string
   end: Date | string
+  duration?: number | null
+  price?: number | null
   isBooked?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -348,6 +422,8 @@ export type EventUpdateManyMutationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  price?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isBooked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -360,6 +436,8 @@ export type EventUncheckedUpdateManyInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  price?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isBooked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -382,9 +460,16 @@ export type EventCountOrderByAggregateInput = {
   description?: Prisma.SortOrder
   start?: Prisma.SortOrder
   end?: Prisma.SortOrder
+  duration?: Prisma.SortOrder
+  price?: Prisma.SortOrder
   isBooked?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type EventAvgOrderByAggregateInput = {
+  duration?: Prisma.SortOrder
+  price?: Prisma.SortOrder
 }
 
 export type EventMaxOrderByAggregateInput = {
@@ -394,6 +479,8 @@ export type EventMaxOrderByAggregateInput = {
   description?: Prisma.SortOrder
   start?: Prisma.SortOrder
   end?: Prisma.SortOrder
+  duration?: Prisma.SortOrder
+  price?: Prisma.SortOrder
   isBooked?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -406,9 +493,16 @@ export type EventMinOrderByAggregateInput = {
   description?: Prisma.SortOrder
   start?: Prisma.SortOrder
   end?: Prisma.SortOrder
+  duration?: Prisma.SortOrder
+  price?: Prisma.SortOrder
   isBooked?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type EventSumOrderByAggregateInput = {
+  duration?: Prisma.SortOrder
+  price?: Prisma.SortOrder
 }
 
 export type EventScalarRelationFilter = {
@@ -458,6 +552,22 @@ export type EventUncheckedUpdateManyWithoutProviderNestedInput = {
   deleteMany?: Prisma.EventScalarWhereInput | Prisma.EventScalarWhereInput[]
 }
 
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
+export type NullableFloatFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type EventCreateNestedOneWithoutBookingInput = {
   create?: Prisma.XOR<Prisma.EventCreateWithoutBookingInput, Prisma.EventUncheckedCreateWithoutBookingInput>
   connectOrCreate?: Prisma.EventCreateOrConnectWithoutBookingInput
@@ -478,6 +588,8 @@ export type EventCreateWithoutProviderInput = {
   description?: string | null
   start: Date | string
   end: Date | string
+  duration?: number | null
+  price?: number | null
   isBooked?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -490,6 +602,8 @@ export type EventUncheckedCreateWithoutProviderInput = {
   description?: string | null
   start: Date | string
   end: Date | string
+  duration?: number | null
+  price?: number | null
   isBooked?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -531,6 +645,8 @@ export type EventScalarWhereInput = {
   description?: Prisma.StringNullableFilter<"Event"> | string | null
   start?: Prisma.DateTimeFilter<"Event"> | Date | string
   end?: Prisma.DateTimeFilter<"Event"> | Date | string
+  duration?: Prisma.IntNullableFilter<"Event"> | number | null
+  price?: Prisma.FloatNullableFilter<"Event"> | number | null
   isBooked?: Prisma.BoolFilter<"Event"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Event"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Event"> | Date | string
@@ -542,6 +658,8 @@ export type EventCreateWithoutBookingInput = {
   description?: string | null
   start: Date | string
   end: Date | string
+  duration?: number | null
+  price?: number | null
   isBooked?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -555,6 +673,8 @@ export type EventUncheckedCreateWithoutBookingInput = {
   description?: string | null
   start: Date | string
   end: Date | string
+  duration?: number | null
+  price?: number | null
   isBooked?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -582,6 +702,8 @@ export type EventUpdateWithoutBookingInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  price?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isBooked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -595,6 +717,8 @@ export type EventUncheckedUpdateWithoutBookingInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  price?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isBooked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -606,6 +730,8 @@ export type EventCreateManyProviderInput = {
   description?: string | null
   start: Date | string
   end: Date | string
+  duration?: number | null
+  price?: number | null
   isBooked?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -617,6 +743,8 @@ export type EventUpdateWithoutProviderInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  price?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isBooked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -629,6 +757,8 @@ export type EventUncheckedUpdateWithoutProviderInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  price?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isBooked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -641,6 +771,8 @@ export type EventUncheckedUpdateManyWithoutProviderInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  price?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isBooked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -655,6 +787,8 @@ export type EventSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   description?: boolean
   start?: boolean
   end?: boolean
+  duration?: boolean
+  price?: boolean
   isBooked?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -669,6 +803,8 @@ export type EventSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   description?: boolean
   start?: boolean
   end?: boolean
+  duration?: boolean
+  price?: boolean
   isBooked?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -682,6 +818,8 @@ export type EventSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   description?: boolean
   start?: boolean
   end?: boolean
+  duration?: boolean
+  price?: boolean
   isBooked?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -695,12 +833,14 @@ export type EventSelectScalar = {
   description?: boolean
   start?: boolean
   end?: boolean
+  duration?: boolean
+  price?: boolean
   isBooked?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type EventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "providerId" | "title" | "description" | "start" | "end" | "isBooked" | "createdAt" | "updatedAt", ExtArgs["result"]["event"]>
+export type EventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "providerId" | "title" | "description" | "start" | "end" | "duration" | "price" | "isBooked" | "createdAt" | "updatedAt", ExtArgs["result"]["event"]>
 export type EventInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   provider?: boolean | Prisma.ProviderDefaultArgs<ExtArgs>
   booking?: boolean | Prisma.Event$bookingArgs<ExtArgs>
@@ -725,6 +865,8 @@ export type $EventPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     description: string | null
     start: Date
     end: Date
+    duration: number | null
+    price: number | null
     isBooked: boolean
     createdAt: Date
     updatedAt: Date
@@ -1159,6 +1301,8 @@ export interface EventFieldRefs {
   readonly description: Prisma.FieldRef<"Event", 'String'>
   readonly start: Prisma.FieldRef<"Event", 'DateTime'>
   readonly end: Prisma.FieldRef<"Event", 'DateTime'>
+  readonly duration: Prisma.FieldRef<"Event", 'Int'>
+  readonly price: Prisma.FieldRef<"Event", 'Float'>
   readonly isBooked: Prisma.FieldRef<"Event", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Event", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Event", 'DateTime'>

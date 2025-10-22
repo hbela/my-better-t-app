@@ -27,6 +27,8 @@ export type ProviderMinAggregateOutputType = {
   id: string | null
   userId: string | null
   departmentId: string | null
+  bio: string | null
+  specialization: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -35,6 +37,8 @@ export type ProviderMaxAggregateOutputType = {
   id: string | null
   userId: string | null
   departmentId: string | null
+  bio: string | null
+  specialization: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -43,6 +47,8 @@ export type ProviderCountAggregateOutputType = {
   id: number
   userId: number
   departmentId: number
+  bio: number
+  specialization: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -53,6 +59,8 @@ export type ProviderMinAggregateInputType = {
   id?: true
   userId?: true
   departmentId?: true
+  bio?: true
+  specialization?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -61,6 +69,8 @@ export type ProviderMaxAggregateInputType = {
   id?: true
   userId?: true
   departmentId?: true
+  bio?: true
+  specialization?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -69,6 +79,8 @@ export type ProviderCountAggregateInputType = {
   id?: true
   userId?: true
   departmentId?: true
+  bio?: true
+  specialization?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -150,6 +162,8 @@ export type ProviderGroupByOutputType = {
   id: string
   userId: string
   departmentId: string
+  bio: string | null
+  specialization: string | null
   createdAt: Date
   updatedAt: Date
   _count: ProviderCountAggregateOutputType | null
@@ -179,6 +193,8 @@ export type ProviderWhereInput = {
   id?: Prisma.StringFilter<"Provider"> | string
   userId?: Prisma.StringFilter<"Provider"> | string
   departmentId?: Prisma.StringFilter<"Provider"> | string
+  bio?: Prisma.StringNullableFilter<"Provider"> | string | null
+  specialization?: Prisma.StringNullableFilter<"Provider"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Provider"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Provider"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -190,6 +206,8 @@ export type ProviderOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   departmentId?: Prisma.SortOrder
+  bio?: Prisma.SortOrderInput | Prisma.SortOrder
+  specialization?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -205,6 +223,8 @@ export type ProviderWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.ProviderWhereInput | Prisma.ProviderWhereInput[]
   userId?: Prisma.StringFilter<"Provider"> | string
   departmentId?: Prisma.StringFilter<"Provider"> | string
+  bio?: Prisma.StringNullableFilter<"Provider"> | string | null
+  specialization?: Prisma.StringNullableFilter<"Provider"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Provider"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Provider"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -216,6 +236,8 @@ export type ProviderOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   departmentId?: Prisma.SortOrder
+  bio?: Prisma.SortOrderInput | Prisma.SortOrder
+  specialization?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.ProviderCountOrderByAggregateInput
@@ -230,12 +252,16 @@ export type ProviderScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Provider"> | string
   userId?: Prisma.StringWithAggregatesFilter<"Provider"> | string
   departmentId?: Prisma.StringWithAggregatesFilter<"Provider"> | string
+  bio?: Prisma.StringNullableWithAggregatesFilter<"Provider"> | string | null
+  specialization?: Prisma.StringNullableWithAggregatesFilter<"Provider"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Provider"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Provider"> | Date | string
 }
 
 export type ProviderCreateInput = {
   id: string
+  bio?: string | null
+  specialization?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutProvidersInput
@@ -247,6 +273,8 @@ export type ProviderUncheckedCreateInput = {
   id: string
   userId: string
   departmentId: string
+  bio?: string | null
+  specialization?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   events?: Prisma.EventUncheckedCreateNestedManyWithoutProviderInput
@@ -254,6 +282,8 @@ export type ProviderUncheckedCreateInput = {
 
 export type ProviderUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutProvidersNestedInput
@@ -265,6 +295,8 @@ export type ProviderUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   departmentId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   events?: Prisma.EventUncheckedUpdateManyWithoutProviderNestedInput
@@ -274,12 +306,16 @@ export type ProviderCreateManyInput = {
   id: string
   userId: string
   departmentId: string
+  bio?: string | null
+  specialization?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type ProviderUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -288,6 +324,8 @@ export type ProviderUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   departmentId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -311,6 +349,8 @@ export type ProviderCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   departmentId?: Prisma.SortOrder
+  bio?: Prisma.SortOrder
+  specialization?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -319,6 +359,8 @@ export type ProviderMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   departmentId?: Prisma.SortOrder
+  bio?: Prisma.SortOrder
+  specialization?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -327,6 +369,8 @@ export type ProviderMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   departmentId?: Prisma.SortOrder
+  bio?: Prisma.SortOrder
+  specialization?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -436,6 +480,8 @@ export type ProviderUpdateOneRequiredWithoutEventsNestedInput = {
 
 export type ProviderCreateWithoutUserInput = {
   id: string
+  bio?: string | null
+  specialization?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department: Prisma.DepartmentCreateNestedOneWithoutProvidersInput
@@ -445,6 +491,8 @@ export type ProviderCreateWithoutUserInput = {
 export type ProviderUncheckedCreateWithoutUserInput = {
   id: string
   departmentId: string
+  bio?: string | null
+  specialization?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   events?: Prisma.EventUncheckedCreateNestedManyWithoutProviderInput
@@ -482,12 +530,16 @@ export type ProviderScalarWhereInput = {
   id?: Prisma.StringFilter<"Provider"> | string
   userId?: Prisma.StringFilter<"Provider"> | string
   departmentId?: Prisma.StringFilter<"Provider"> | string
+  bio?: Prisma.StringNullableFilter<"Provider"> | string | null
+  specialization?: Prisma.StringNullableFilter<"Provider"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Provider"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Provider"> | Date | string
 }
 
 export type ProviderCreateWithoutDepartmentInput = {
   id: string
+  bio?: string | null
+  specialization?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutProvidersInput
@@ -497,6 +549,8 @@ export type ProviderCreateWithoutDepartmentInput = {
 export type ProviderUncheckedCreateWithoutDepartmentInput = {
   id: string
   userId: string
+  bio?: string | null
+  specialization?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   events?: Prisma.EventUncheckedCreateNestedManyWithoutProviderInput
@@ -529,6 +583,8 @@ export type ProviderUpdateManyWithWhereWithoutDepartmentInput = {
 
 export type ProviderCreateWithoutEventsInput = {
   id: string
+  bio?: string | null
+  specialization?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutProvidersInput
@@ -539,6 +595,8 @@ export type ProviderUncheckedCreateWithoutEventsInput = {
   id: string
   userId: string
   departmentId: string
+  bio?: string | null
+  specialization?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -561,6 +619,8 @@ export type ProviderUpdateToOneWithWhereWithoutEventsInput = {
 
 export type ProviderUpdateWithoutEventsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutProvidersNestedInput
@@ -571,6 +631,8 @@ export type ProviderUncheckedUpdateWithoutEventsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   departmentId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -578,12 +640,16 @@ export type ProviderUncheckedUpdateWithoutEventsInput = {
 export type ProviderCreateManyUserInput = {
   id: string
   departmentId: string
+  bio?: string | null
+  specialization?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type ProviderUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneRequiredWithoutProvidersNestedInput
@@ -593,6 +659,8 @@ export type ProviderUpdateWithoutUserInput = {
 export type ProviderUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   departmentId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   events?: Prisma.EventUncheckedUpdateManyWithoutProviderNestedInput
@@ -601,6 +669,8 @@ export type ProviderUncheckedUpdateWithoutUserInput = {
 export type ProviderUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   departmentId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -608,12 +678,16 @@ export type ProviderUncheckedUpdateManyWithoutUserInput = {
 export type ProviderCreateManyDepartmentInput = {
   id: string
   userId: string
+  bio?: string | null
+  specialization?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type ProviderUpdateWithoutDepartmentInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutProvidersNestedInput
@@ -623,6 +697,8 @@ export type ProviderUpdateWithoutDepartmentInput = {
 export type ProviderUncheckedUpdateWithoutDepartmentInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   events?: Prisma.EventUncheckedUpdateManyWithoutProviderNestedInput
@@ -631,6 +707,8 @@ export type ProviderUncheckedUpdateWithoutDepartmentInput = {
 export type ProviderUncheckedUpdateManyWithoutDepartmentInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -670,6 +748,8 @@ export type ProviderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   id?: boolean
   userId?: boolean
   departmentId?: boolean
+  bio?: boolean
+  specialization?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -682,6 +762,8 @@ export type ProviderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   id?: boolean
   userId?: boolean
   departmentId?: boolean
+  bio?: boolean
+  specialization?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -692,6 +774,8 @@ export type ProviderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   id?: boolean
   userId?: boolean
   departmentId?: boolean
+  bio?: boolean
+  specialization?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -702,11 +786,13 @@ export type ProviderSelectScalar = {
   id?: boolean
   userId?: boolean
   departmentId?: boolean
+  bio?: boolean
+  specialization?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ProviderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "departmentId" | "createdAt" | "updatedAt", ExtArgs["result"]["provider"]>
+export type ProviderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "departmentId" | "bio" | "specialization" | "createdAt" | "updatedAt", ExtArgs["result"]["provider"]>
 export type ProviderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   department?: boolean | Prisma.DepartmentDefaultArgs<ExtArgs>
@@ -733,6 +819,8 @@ export type $ProviderPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     id: string
     userId: string
     departmentId: string
+    bio: string | null
+    specialization: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["provider"]>
@@ -1164,6 +1252,8 @@ export interface ProviderFieldRefs {
   readonly id: Prisma.FieldRef<"Provider", 'String'>
   readonly userId: Prisma.FieldRef<"Provider", 'String'>
   readonly departmentId: Prisma.FieldRef<"Provider", 'String'>
+  readonly bio: Prisma.FieldRef<"Provider", 'String'>
+  readonly specialization: Prisma.FieldRef<"Provider", 'String'>
   readonly createdAt: Prisma.FieldRef<"Provider", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Provider", 'DateTime'>
 }

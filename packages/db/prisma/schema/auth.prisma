@@ -1,20 +1,28 @@
+enum UserRole {
+  ADMIN
+  OWNER
+  PROVIDER
+  CLIENT
+}
+
 model User {
-  id                  String     @id @map("_id")
+  id                  String         @id @map("_id")
   name                String
   email               String
   emailVerified       Boolean
   image               String?
   createdAt           DateTime
   updatedAt           DateTime
-  systemRole          String?    @default("USER")
-  banned              Boolean?   @default(false)
+  role                UserRole       @default(CLIENT)
+  banned              Boolean?       @default(false)
   banReason           String?
   banExpires          DateTime?
-  needsPasswordChange Boolean?   @default(false)
+  needsPasswordChange Boolean?       @default(false)
   sessions            Session[]
   accounts            Account[]
   providers           Provider[]
   bookings            Booking[]
+  subscriptions       Subscription[]
 
   @@unique([email])
   @@map("user")
@@ -67,15 +75,17 @@ model Verification {
 }
 
 model Organization {
-  id          String       @id @map("_id")
-  name        String
-  slug        String       @unique
-  logo        String?
-  enabled     Boolean      @default(false)
-  createdAt   DateTime
-  metadata    String?
-  members     Member[]
-  departments Department[]
+  id            String         @id @map("_id")
+  name          String
+  description   String?
+  slug          String         @unique
+  logo          String?
+  enabled       Boolean        @default(false)
+  createdAt     DateTime
+  metadata      String?
+  members       Member[]
+  departments   Department[]
+  subscriptions Subscription[]
 
   @@map("organization")
 }
@@ -86,7 +96,6 @@ model Member {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   userId         String
   email          String?
-  role           String
   createdAt      DateTime
 
   @@unique([organizationId, userId])
@@ -97,7 +106,6 @@ model Invitation {
   id             String   @id @map("_id")
   organizationId String
   email          String
-  role           String?
   status         String
   expiresAt      DateTime
   inviterId      String
@@ -109,6 +117,7 @@ model Invitation {
 model Department {
   id             String       @id @map("_id")
   name           String
+  description    String?
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   providers      Provider[]
@@ -119,14 +128,16 @@ model Department {
 }
 
 model Provider {
-  id           String     @id @map("_id")
-  userId       String
-  departmentId String
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  events       Event[]
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id             String     @id @map("_id")
+  userId         String
+  departmentId   String
+  bio            String?
+  specialization String?
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department     Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  events         Event[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
   @@unique([userId, departmentId])
   @@map("provider")
@@ -140,6 +151,8 @@ model Event {
   description String?
   start       DateTime
   end         DateTime
+  duration    Int? // in minutes
+  price       Float?
   isBooked    Boolean  @default(false)
   booking     Booking?
   createdAt   DateTime @default(now())
@@ -152,10 +165,72 @@ model Booking {
   id        String   @id @map("_id")
   eventId   String   @unique
   memberId  String
+  status    String   @default("CONFIRMED") // "CONFIRMED", "CANCELLED", "COMPLETED"
   event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   member    User     @relation(fields: [memberId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("booking")
+}
+
+model Product {
+  id            String         @id @map("_id")
+  polarId       String         @unique
+  name          String
+  description   String?
+  priceCents    Int
+  currency      String         @default("USD")
+  interval      String? // "month", "year", null for one-time
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subscriptions Subscription[]
+
+  @@map("product")
+}
+
+model Subscription {
+  id                  String    @id @map("_id")
+  polarCheckoutId     String?   @unique
+  polarSubscriptionId String?   @unique
+  polarCustomerId     String?
+  status              String // "active", "cancelled", "expired", "pending"
+  currentPeriodStart  DateTime?
+  currentPeriodEnd    DateTime?
+  cancelledAt         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  payments Payment[]
+
+  @@map("subscription")
+}
+
+model Payment {
+  id             String   @id @map("_id")
+  polarPaymentId String?  @unique
+  amount         Int // Amount in cents
+  currency       String   @default("USD")
+  status         String // "succeeded", "pending", "failed", "refunded"
+  paymentMethod  String?
+  receiptUrl     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@map("payment")
 }

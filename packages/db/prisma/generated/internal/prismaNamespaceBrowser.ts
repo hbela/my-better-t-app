@@ -58,7 +58,10 @@ export const ModelName = {
   Department: 'Department',
   Provider: 'Provider',
   Event: 'Event',
-  Booking: 'Booking'
+  Booking: 'Booking',
+  Product: 'Product',
+  Subscription: 'Subscription',
+  Payment: 'Payment'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -82,7 +85,7 @@ export const UserScalarFieldEnum = {
   image: 'image',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  systemRole: 'systemRole',
+  role: 'role',
   banned: 'banned',
   banReason: 'banReason',
   banExpires: 'banExpires',
@@ -141,6 +144,7 @@ export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[k
 export const OrganizationScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  description: 'description',
   slug: 'slug',
   logo: 'logo',
   enabled: 'enabled',
@@ -156,7 +160,6 @@ export const MemberScalarFieldEnum = {
   organizationId: 'organizationId',
   userId: 'userId',
   email: 'email',
-  role: 'role',
   createdAt: 'createdAt'
 } as const
 
@@ -167,7 +170,6 @@ export const InvitationScalarFieldEnum = {
   id: 'id',
   organizationId: 'organizationId',
   email: 'email',
-  role: 'role',
   status: 'status',
   expiresAt: 'expiresAt',
   inviterId: 'inviterId'
@@ -179,6 +181,7 @@ export type InvitationScalarFieldEnum = (typeof InvitationScalarFieldEnum)[keyof
 export const DepartmentScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  description: 'description',
   organizationId: 'organizationId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -191,6 +194,8 @@ export const ProviderScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   departmentId: 'departmentId',
+  bio: 'bio',
+  specialization: 'specialization',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -205,6 +210,8 @@ export const EventScalarFieldEnum = {
   description: 'description',
   start: 'start',
   end: 'end',
+  duration: 'duration',
+  price: 'price',
   isBooked: 'isBooked',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -217,11 +224,63 @@ export const BookingScalarFieldEnum = {
   id: 'id',
   eventId: 'eventId',
   memberId: 'memberId',
+  status: 'status',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type BookingScalarFieldEnum = (typeof BookingScalarFieldEnum)[keyof typeof BookingScalarFieldEnum]
+
+
+export const ProductScalarFieldEnum = {
+  id: 'id',
+  polarId: 'polarId',
+  name: 'name',
+  description: 'description',
+  priceCents: 'priceCents',
+  currency: 'currency',
+  interval: 'interval',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
+
+
+export const SubscriptionScalarFieldEnum = {
+  id: 'id',
+  polarCheckoutId: 'polarCheckoutId',
+  polarSubscriptionId: 'polarSubscriptionId',
+  polarCustomerId: 'polarCustomerId',
+  status: 'status',
+  currentPeriodStart: 'currentPeriodStart',
+  currentPeriodEnd: 'currentPeriodEnd',
+  cancelledAt: 'cancelledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  userId: 'userId',
+  organizationId: 'organizationId',
+  productId: 'productId'
+} as const
+
+export type SubscriptionScalarFieldEnum = (typeof SubscriptionScalarFieldEnum)[keyof typeof SubscriptionScalarFieldEnum]
+
+
+export const PaymentScalarFieldEnum = {
+  id: 'id',
+  polarPaymentId: 'polarPaymentId',
+  amount: 'amount',
+  currency: 'currency',
+  status: 'status',
+  paymentMethod: 'paymentMethod',
+  receiptUrl: 'receiptUrl',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  subscriptionId: 'subscriptionId'
+} as const
+
+export type PaymentScalarFieldEnum = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarFieldEnum]
 
 
 export const SortOrder = {

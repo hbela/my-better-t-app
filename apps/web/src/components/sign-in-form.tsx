@@ -2,19 +2,19 @@ import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import z from "zod";
+import { useState } from "react";
 import Loader from "./loader";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { useEffect, useState } from "react";
-
-interface Organization {
-  id: string;
-  name: string;
-  slug: string;
-  logo?: string;
-}
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
 
 export default function SignInForm({
   onSwitchToSignUp,
@@ -25,34 +25,22 @@ export default function SignInForm({
     from: "/",
   });
   const { isPending } = authClient.useSession();
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [loadingOrgs, setLoadingOrgs] = useState(true);
-
-  useEffect(() => {
-    // Load organizations on component mount
-    const fetchOrganizations = async () => {
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_SERVER_URL}/api/organizations`
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setOrganizations(data);
-        }
-      } catch (error) {
-        console.error("Error loading organizations:", error);
-      } finally {
-        setLoadingOrgs(false);
-      }
-    };
-    fetchOrganizations();
-  }, []);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [isSendingReset, setIsSendingReset] = useState(false);
+  const [showPasswordChangeDialog, setShowPasswordChangeDialog] =
+    useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [pendingRedirectRole, setPendingRedirectRole] = useState<string | null>(
+    null
+  );
 
   const form = useForm({
     defaultValues: {
       email: "",
       password: "",
-      organizationId: "",
     },
     onSubmit: async ({ value }) => {
       await authClient.signIn.email(
@@ -61,40 +49,158 @@ export default function SignInForm({
           password: value.password,
         },
         {
-          onSuccess: async () => {
-            // If an organization was selected, set it as active
-            if (value.organizationId) {
-              try {
-                await authClient.organization.setActiveOrganization({
-                  organizationId: value.organizationId,
-                });
-                toast.success("Signed in with active organization!");
-              } catch (error) {
-                toast.warning(
-                  "Signed in but failed to set active organization"
-                );
-              }
-            } else {
-              toast.success("Sign in successful");
+          onSuccess: async (context) => {
+            toast.success("Sign in successful");
+
+            // Debug: Log the full context to see what we're getting
+            console.log("🔍 Sign-in context:", context);
+            console.log("🔍 User data from sign-in:", context.data?.user);
+
+            // IMPORTANT: The sign-in response doesn't include custom fields (role, needsPasswordChange)
+            // We need to fetch the session to get the complete user data
+            console.log("🔄 Fetching fresh session data...");
+
+            // Wait a moment for the session to be set
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            // Get the fresh session with complete user data
+            const session = await authClient.getSession();
+            console.log("🔍 Session data:", session);
+            console.log("🔍 Session user:", session.data?.user);
+
+            // @ts-ignore - role is UserRole enum
+            const role = session.data?.user?.role;
+            // @ts-ignore - needsPasswordChange is custom field
+            const needsPasswordChange = session.data?.user?.needsPasswordChange;
+
+            console.log("🔍 User role from session:", role);
+            console.log(
+              "🔍 Needs password change from session:",
+              needsPasswordChange
+            );
+
+            // Check if user needs to change password
+            if (needsPasswordChange) {
+              console.log("✅ Password change required - showing dialog");
+              setPendingRedirectRole(role || "CLIENT");
+              setShowPasswordChangeDialog(true);
+              return; // Don't redirect yet
             }
-            navigate({
-              to: "/dashboard",
-            });
+
+            // Redirect based on role - each role has its own dashboard
+            console.log("🚀 Redirecting based on role:", role);
+            if (role === "ADMIN") {
+              navigate({ to: "/admin" });
+            } else if (role === "OWNER") {
+              navigate({ to: "/owner" });
+            } else if (role === "PROVIDER") {
+              navigate({ to: "/provider" });
+            } else {
+              // CLIENT or default
+              console.log("⚠️ Defaulting to CLIENT dashboard");
+              navigate({ to: "/client" });
+            }
           },
           onError: (error) => {
-            toast.error(error.error.message || error.error.statusText);
+            const errorMessage =
+              (error as any)?.error?.message || "Sign in failed";
+            toast.error(errorMessage);
+            console.error("Sign in error:", error);
           },
         }
       );
     },
-    validators: {
-      onSubmit: z.object({
-        email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
-        organizationId: z.string().optional(),
-      }),
-    },
   });
+
+  const handleForgotPassword = async () => {
+    if (!forgotPasswordEmail) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    setIsSendingReset(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_URL}/api/auth/forgot-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: forgotPasswordEmail }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success("Password reset email sent! Check your inbox.");
+        setShowForgotPassword(false);
+        setForgotPasswordEmail("");
+      } else {
+        const error = await response.json();
+        toast.error(error.message || "Failed to send reset email");
+      }
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      toast.error("Failed to send reset email");
+    } finally {
+      setIsSendingReset(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    // Validate passwords
+    if (!newPassword || newPassword.length < 8) {
+      toast.error("New password must be at least 8 characters");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_URL}/api/auth/update-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ newPassword }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success("Password updated successfully!");
+        setShowPasswordChangeDialog(false);
+        setNewPassword("");
+        setConfirmPassword("");
+
+        // Now redirect to the appropriate dashboard
+        if (pendingRedirectRole === "ADMIN") {
+          navigate({ to: "/admin" });
+        } else if (pendingRedirectRole === "OWNER") {
+          navigate({ to: "/owner" });
+        } else if (pendingRedirectRole === "PROVIDER") {
+          navigate({ to: "/provider" });
+        } else {
+          // CLIENT or default
+          navigate({ to: "/client" });
+        }
+      } else {
+        const error = await response.json();
+        toast.error(error.error || "Failed to update password");
+      }
+    } catch (error) {
+      console.error("Password update error:", error);
+      toast.error("Failed to update password");
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   if (isPending) {
     return <Loader />;
@@ -125,9 +231,9 @@ export default function SignInForm({
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
-                    {error?.message}
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={index} className="text-red-500 text-sm">
+                    {String(error)}
                   </p>
                 ))}
               </div>
@@ -148,47 +254,9 @@ export default function SignInForm({
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
-                    {error?.message}
-                  </p>
-                ))}
-              </div>
-            )}
-          </form.Field>
-        </div>
-
-        <div>
-          <form.Field name="organizationId">
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor={field.name}>
-                  Active Organization (Optional)
-                </Label>
-                {loadingOrgs ? (
-                  <p className="text-sm text-muted-foreground">
-                    Loading organizations...
-                  </p>
-                ) : (
-                  <select
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">No organization</option>
-                    {organizations.map((org) => (
-                      <option key={org.id} value={org.id}>
-                        {org.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
-                    {error?.message}
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={index} className="text-red-500 text-sm">
+                    {String(error)}
                   </p>
                 ))}
               </div>
@@ -209,6 +277,57 @@ export default function SignInForm({
         </form.Subscribe>
       </form>
 
+      {/* Forgot Password Section */}
+      {showForgotPassword ? (
+        <div className="mt-6 p-4 border rounded-lg bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3">Reset Password</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Enter your email address and we'll send you a link to reset your
+            password.
+          </p>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="reset-email">Email Address</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                value={forgotPasswordEmail}
+                onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                placeholder="Enter your email"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleForgotPassword}
+                disabled={isSendingReset}
+                className="flex-1"
+              >
+                {isSendingReset ? "Sending..." : "Send Reset Email"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setForgotPasswordEmail("");
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 text-center">
+          <Button
+            variant="link"
+            onClick={() => setShowForgotPassword(true)}
+            className="text-indigo-600 hover:text-indigo-800"
+          >
+            Forgot your password?
+          </Button>
+        </div>
+      )}
+
       <div className="mt-4 text-center">
         <Button
           variant="link"
@@ -218,6 +337,55 @@ export default function SignInForm({
           Need an account? Sign Up
         </Button>
       </div>
+
+      {/* Mandatory Password Change Dialog */}
+      <Dialog open={showPasswordChangeDialog} onOpenChange={() => {}}>
+        <DialogContent
+          className="sm:max-w-md"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle>Change Your Password</DialogTitle>
+            <DialogDescription>
+              For security reasons, you must change your temporary password
+              before continuing.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                disabled={isChangingPassword}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm New Password</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter new password"
+                disabled={isChangingPassword}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handlePasswordChange}
+              disabled={isChangingPassword || !newPassword || !confirmPassword}
+              className="w-full"
+            >
+              {isChangingPassword ? "Updating..." : "Update Password"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

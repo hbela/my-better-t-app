@@ -9,24 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProviderIndexRouteImport } from './routes/provider/index'
+import { Route as OwnerIndexRouteImport } from './routes/owner/index'
+import { Route as ClientIndexRouteImport } from './routes/client/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as ProviderCalendarRouteImport } from './routes/provider/calendar'
+import { Route as OwnerProvidersRouteImport } from './routes/owner/providers'
+import { Route as OwnerDepartmentsRouteImport } from './routes/owner/departments'
+import { Route as ClientOrganizationsOrgIdRouteImport } from './routes/client/organizations/$orgId'
+import { Route as ClientOrganizationsOrgIdDepartmentsDeptIdRouteImport } from './routes/client/organizations/$orgId/departments/$deptId'
+import { Route as ClientOrganizationsOrgIdDepartmentsDeptIdProvidersProviderIdRouteImport } from './routes/client/organizations/$orgId/departments/$deptId/providers/$providerId'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -34,62 +38,184 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProviderIndexRoute = ProviderIndexRouteImport.update({
+  id: '/provider/',
+  path: '/provider/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerIndexRoute = OwnerIndexRouteImport.update({
+  id: '/owner/',
+  path: '/owner/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientIndexRoute = ClientIndexRouteImport.update({
+  id: '/client/',
+  path: '/client/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProviderCalendarRoute = ProviderCalendarRouteImport.update({
+  id: '/provider/calendar',
+  path: '/provider/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerProvidersRoute = OwnerProvidersRouteImport.update({
+  id: '/owner/providers',
+  path: '/owner/providers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerDepartmentsRoute = OwnerDepartmentsRouteImport.update({
+  id: '/owner/departments',
+  path: '/owner/departments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientOrganizationsOrgIdRoute =
+  ClientOrganizationsOrgIdRouteImport.update({
+    id: '/client/organizations/$orgId',
+    path: '/client/organizations/$orgId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ClientOrganizationsOrgIdDepartmentsDeptIdRoute =
+  ClientOrganizationsOrgIdDepartmentsDeptIdRouteImport.update({
+    id: '/departments/$deptId',
+    path: '/departments/$deptId',
+    getParentRoute: () => ClientOrganizationsOrgIdRoute,
+  } as any)
+const ClientOrganizationsOrgIdDepartmentsDeptIdProvidersProviderIdRoute =
+  ClientOrganizationsOrgIdDepartmentsDeptIdProvidersProviderIdRouteImport.update(
+    {
+      id: '/providers/$providerId',
+      path: '/providers/$providerId',
+      getParentRoute: () => ClientOrganizationsOrgIdDepartmentsDeptIdRoute,
+    } as any,
+  )
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/owner/departments': typeof OwnerDepartmentsRoute
+  '/owner/providers': typeof OwnerProvidersRoute
+  '/provider/calendar': typeof ProviderCalendarRoute
+  '/admin': typeof AdminIndexRoute
+  '/client': typeof ClientIndexRoute
+  '/owner': typeof OwnerIndexRoute
+  '/provider': typeof ProviderIndexRoute
+  '/client/organizations/$orgId': typeof ClientOrganizationsOrgIdRouteWithChildren
+  '/client/organizations/$orgId/departments/$deptId': typeof ClientOrganizationsOrgIdDepartmentsDeptIdRouteWithChildren
+  '/client/organizations/$orgId/departments/$deptId/providers/$providerId': typeof ClientOrganizationsOrgIdDepartmentsDeptIdProvidersProviderIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/owner/departments': typeof OwnerDepartmentsRoute
+  '/owner/providers': typeof OwnerProvidersRoute
+  '/provider/calendar': typeof ProviderCalendarRoute
+  '/admin': typeof AdminIndexRoute
+  '/client': typeof ClientIndexRoute
+  '/owner': typeof OwnerIndexRoute
+  '/provider': typeof ProviderIndexRoute
+  '/client/organizations/$orgId': typeof ClientOrganizationsOrgIdRouteWithChildren
+  '/client/organizations/$orgId/departments/$deptId': typeof ClientOrganizationsOrgIdDepartmentsDeptIdRouteWithChildren
+  '/client/organizations/$orgId/departments/$deptId/providers/$providerId': typeof ClientOrganizationsOrgIdDepartmentsDeptIdProvidersProviderIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/owner/departments': typeof OwnerDepartmentsRoute
+  '/owner/providers': typeof OwnerProvidersRoute
+  '/provider/calendar': typeof ProviderCalendarRoute
+  '/admin/': typeof AdminIndexRoute
+  '/client/': typeof ClientIndexRoute
+  '/owner/': typeof OwnerIndexRoute
+  '/provider/': typeof ProviderIndexRoute
+  '/client/organizations/$orgId': typeof ClientOrganizationsOrgIdRouteWithChildren
+  '/client/organizations/$orgId/departments/$deptId': typeof ClientOrganizationsOrgIdDepartmentsDeptIdRouteWithChildren
+  '/client/organizations/$orgId/departments/$deptId/providers/$providerId': typeof ClientOrganizationsOrgIdDepartmentsDeptIdProvidersProviderIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/dashboard' | '/login'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/reset-password'
+    | '/owner/departments'
+    | '/owner/providers'
+    | '/provider/calendar'
+    | '/admin'
+    | '/client'
+    | '/owner'
+    | '/provider'
+    | '/client/organizations/$orgId'
+    | '/client/organizations/$orgId/departments/$deptId'
+    | '/client/organizations/$orgId/departments/$deptId/providers/$providerId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/dashboard' | '/login'
-  id: '__root__' | '/' | '/admin' | '/dashboard' | '/login'
+  to:
+    | '/'
+    | '/login'
+    | '/reset-password'
+    | '/owner/departments'
+    | '/owner/providers'
+    | '/provider/calendar'
+    | '/admin'
+    | '/client'
+    | '/owner'
+    | '/provider'
+    | '/client/organizations/$orgId'
+    | '/client/organizations/$orgId/departments/$deptId'
+    | '/client/organizations/$orgId/departments/$deptId/providers/$providerId'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/reset-password'
+    | '/owner/departments'
+    | '/owner/providers'
+    | '/provider/calendar'
+    | '/admin/'
+    | '/client/'
+    | '/owner/'
+    | '/provider/'
+    | '/client/organizations/$orgId'
+    | '/client/organizations/$orgId/departments/$deptId'
+    | '/client/organizations/$orgId/departments/$deptId/providers/$providerId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
-  DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  OwnerDepartmentsRoute: typeof OwnerDepartmentsRoute
+  OwnerProvidersRoute: typeof OwnerProvidersRoute
+  ProviderCalendarRoute: typeof ProviderCalendarRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  ClientIndexRoute: typeof ClientIndexRoute
+  OwnerIndexRoute: typeof OwnerIndexRoute
+  ProviderIndexRoute: typeof ProviderIndexRoute
+  ClientOrganizationsOrgIdRoute: typeof ClientOrganizationsOrgIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -99,14 +225,121 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/provider/': {
+      id: '/provider/'
+      path: '/provider'
+      fullPath: '/provider'
+      preLoaderRoute: typeof ProviderIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner/': {
+      id: '/owner/'
+      path: '/owner'
+      fullPath: '/owner'
+      preLoaderRoute: typeof OwnerIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/client/': {
+      id: '/client/'
+      path: '/client'
+      fullPath: '/client'
+      preLoaderRoute: typeof ClientIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/provider/calendar': {
+      id: '/provider/calendar'
+      path: '/provider/calendar'
+      fullPath: '/provider/calendar'
+      preLoaderRoute: typeof ProviderCalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner/providers': {
+      id: '/owner/providers'
+      path: '/owner/providers'
+      fullPath: '/owner/providers'
+      preLoaderRoute: typeof OwnerProvidersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner/departments': {
+      id: '/owner/departments'
+      path: '/owner/departments'
+      fullPath: '/owner/departments'
+      preLoaderRoute: typeof OwnerDepartmentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/client/organizations/$orgId': {
+      id: '/client/organizations/$orgId'
+      path: '/client/organizations/$orgId'
+      fullPath: '/client/organizations/$orgId'
+      preLoaderRoute: typeof ClientOrganizationsOrgIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/client/organizations/$orgId/departments/$deptId': {
+      id: '/client/organizations/$orgId/departments/$deptId'
+      path: '/departments/$deptId'
+      fullPath: '/client/organizations/$orgId/departments/$deptId'
+      preLoaderRoute: typeof ClientOrganizationsOrgIdDepartmentsDeptIdRouteImport
+      parentRoute: typeof ClientOrganizationsOrgIdRoute
+    }
+    '/client/organizations/$orgId/departments/$deptId/providers/$providerId': {
+      id: '/client/organizations/$orgId/departments/$deptId/providers/$providerId'
+      path: '/providers/$providerId'
+      fullPath: '/client/organizations/$orgId/departments/$deptId/providers/$providerId'
+      preLoaderRoute: typeof ClientOrganizationsOrgIdDepartmentsDeptIdProvidersProviderIdRouteImport
+      parentRoute: typeof ClientOrganizationsOrgIdDepartmentsDeptIdRoute
+    }
   }
 }
 
+interface ClientOrganizationsOrgIdDepartmentsDeptIdRouteChildren {
+  ClientOrganizationsOrgIdDepartmentsDeptIdProvidersProviderIdRoute: typeof ClientOrganizationsOrgIdDepartmentsDeptIdProvidersProviderIdRoute
+}
+
+const ClientOrganizationsOrgIdDepartmentsDeptIdRouteChildren: ClientOrganizationsOrgIdDepartmentsDeptIdRouteChildren =
+  {
+    ClientOrganizationsOrgIdDepartmentsDeptIdProvidersProviderIdRoute:
+      ClientOrganizationsOrgIdDepartmentsDeptIdProvidersProviderIdRoute,
+  }
+
+const ClientOrganizationsOrgIdDepartmentsDeptIdRouteWithChildren =
+  ClientOrganizationsOrgIdDepartmentsDeptIdRoute._addFileChildren(
+    ClientOrganizationsOrgIdDepartmentsDeptIdRouteChildren,
+  )
+
+interface ClientOrganizationsOrgIdRouteChildren {
+  ClientOrganizationsOrgIdDepartmentsDeptIdRoute: typeof ClientOrganizationsOrgIdDepartmentsDeptIdRouteWithChildren
+}
+
+const ClientOrganizationsOrgIdRouteChildren: ClientOrganizationsOrgIdRouteChildren =
+  {
+    ClientOrganizationsOrgIdDepartmentsDeptIdRoute:
+      ClientOrganizationsOrgIdDepartmentsDeptIdRouteWithChildren,
+  }
+
+const ClientOrganizationsOrgIdRouteWithChildren =
+  ClientOrganizationsOrgIdRoute._addFileChildren(
+    ClientOrganizationsOrgIdRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
-  DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  OwnerDepartmentsRoute: OwnerDepartmentsRoute,
+  OwnerProvidersRoute: OwnerProvidersRoute,
+  ProviderCalendarRoute: ProviderCalendarRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  ClientIndexRoute: ClientIndexRoute,
+  OwnerIndexRoute: OwnerIndexRoute,
+  ProviderIndexRoute: ProviderIndexRoute,
+  ClientOrganizationsOrgIdRoute: ClientOrganizationsOrgIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

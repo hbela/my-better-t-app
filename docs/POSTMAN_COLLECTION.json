@@ -1,5 +1,6 @@
 {
   "info": {
+    "_postman_id": "medisched-api-collection",
     "name": "Medisched API",
     "description": "Complete API collection for Medisched healthcare scheduling platform",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -21,16 +22,6 @@
       "type": "string"
     },
     {
-      "key": "providerToken",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "memberToken",
-      "value": "",
-      "type": "string"
-    },
-    {
       "key": "organizationId",
       "value": "",
       "type": "string"
@@ -44,33 +35,20 @@
       "key": "departmentId",
       "value": "",
       "type": "string"
-    },
-    {
-      "key": "providerId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "eventId",
-      "value": "",
-      "type": "string"
     }
   ],
   "item": [
     {
-      "name": "Health Check",
+      "name": "0. Health Check",
       "request": {
         "method": "GET",
         "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/health",
-          "host": ["{{baseUrl}}"],
-          "path": ["health"]
-        }
+        "url": "http://localhost:3000/health",
+        "description": "Check if the server is running"
       }
     },
     {
-      "name": "Admin Endpoints",
+      "name": "Admin - User & Organization Management",
       "item": [
         {
           "name": "1. Create User with Temp Password",
@@ -94,9 +72,9 @@
               "raw": "{{baseUrl}}/api/admin/users",
               "host": ["{{baseUrl}}"],
               "path": ["api", "admin", "users"]
-            }
-          },
-          "response": []
+            },
+            "description": "Admin creates a user with temporary password. Email sent to user."
+          }
         },
         {
           "name": "2. Create Organization",
@@ -120,9 +98,9 @@
               "raw": "{{baseUrl}}/api/admin/organizations/create",
               "host": ["{{baseUrl}}"],
               "path": ["api", "admin", "organizations", "create"]
-            }
-          },
-          "response": []
+            },
+            "description": "Admin creates organization. Organization is disabled by default."
+          }
         },
         {
           "name": "3. Toggle Organization Status",
@@ -146,9 +124,9 @@
               "raw": "{{baseUrl}}/api/admin/organizations/{{organizationId}}/toggle",
               "host": ["{{baseUrl}}"],
               "path": ["api", "admin", "organizations", "{{organizationId}}", "toggle"]
-            }
-          },
-          "response": []
+            },
+            "description": "Admin manually enables or disables an organization"
+          }
         },
         {
           "name": "Get Admin Overview",
@@ -164,7 +142,8 @@
               "raw": "{{baseUrl}}/api/admin/overview",
               "host": ["{{baseUrl}}"],
               "path": ["api", "admin", "overview"]
-            }
+            },
+            "description": "Get platform-wide statistics and all organization data"
           }
         },
         {
@@ -181,7 +160,8 @@
               "raw": "{{baseUrl}}/api/admin/organizations",
               "host": ["{{baseUrl}}"],
               "path": ["api", "admin", "organizations"]
-            }
+            },
+            "description": "List all organizations with members and departments"
           }
         }
       ]
@@ -203,7 +183,8 @@
               "raw": "{{baseUrl}}/api/auth/check-password-change",
               "host": ["{{baseUrl}}"],
               "path": ["api", "auth", "check-password-change"]
-            }
+            },
+            "description": "Check if user needs to change password (for temp passwords)"
           }
         },
         {
@@ -228,7 +209,8 @@
               "raw": "{{baseUrl}}/api/auth/update-password",
               "host": ["{{baseUrl}}"],
               "path": ["api", "auth", "update-password"]
-            }
+            },
+            "description": "Update user password and clear needsPasswordChange flag"
           }
         }
       ]
@@ -250,7 +232,8 @@
               "raw": "{{baseUrl}}/api/organizations/{{organizationId}}/subscription",
               "host": ["{{baseUrl}}"],
               "path": ["api", "organizations", "{{organizationId}}", "subscription"]
-            }
+            },
+            "description": "Check if organization is enabled and subscription status"
           }
         },
         {
@@ -275,7 +258,8 @@
               "raw": "{{baseUrl}}/api/subscriptions/create-checkout",
               "host": ["{{baseUrl}}"],
               "path": ["api", "subscriptions", "create-checkout"]
-            }
+            },
+            "description": "Create Polar checkout session for subscription"
           }
         }
       ]
@@ -301,7 +285,8 @@
               "raw": "{{baseUrl}}/api/webhooks/polar",
               "host": ["{{baseUrl}}"],
               "path": ["api", "webhooks", "polar"]
-            }
+            },
+            "description": "Simulate Polar webhook to enable organization after payment"
           }
         }
       ]
@@ -331,7 +316,8 @@
               "raw": "{{baseUrl}}/api/departments",
               "host": ["{{baseUrl}}"],
               "path": ["api", "departments"]
-            }
+            },
+            "description": "Create department (requires enabled organization)"
           }
         },
         {
@@ -354,164 +340,26 @@
                   "value": "{{organizationId}}"
                 }
               ]
-            }
+            },
+            "description": "List all departments in organization"
           }
         }
       ]
     },
     {
-      "name": "Providers",
+      "name": "Public",
       "item": [
         {
-          "name": "Assign Provider",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Cookie",
-                "value": "better-auth.session_token={{ownerToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"organizationId\": \"{{organizationId}}\",\n  \"departmentId\": \"{{departmentId}}\",\n  \"userId\": \"DOCTOR_USER_ID\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/providers",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "providers"]
-            }
-          }
-        },
-        {
-          "name": "List Providers",
+          "name": "List Organizations",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Cookie",
-                "value": "better-auth.session_token={{ownerToken}}"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/providers?organizationId={{organizationId}}",
+              "raw": "{{baseUrl}}/api/organizations",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "providers"],
-              "query": [
-                {
-                  "key": "organizationId",
-                  "value": "{{organizationId}}"
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Events",
-      "item": [
-        {
-          "name": "Create Event",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Cookie",
-                "value": "better-auth.session_token={{providerToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"providerId\": \"{{providerId}}\",\n  \"title\": \"General Consultation\",\n  \"description\": \"30-minute consultation\",\n  \"start\": \"2025-10-20T10:00:00Z\",\n  \"end\": \"2025-10-20T10:30:00Z\"\n}"
+              "path": ["api", "organizations"]
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/events",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events"]
-            }
-          }
-        },
-        {
-          "name": "List Available Events",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Cookie",
-                "value": "better-auth.session_token={{memberToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/events?organizationId={{organizationId}}&available=true",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events"],
-              "query": [
-                {
-                  "key": "organizationId",
-                  "value": "{{organizationId}}"
-                },
-                {
-                  "key": "available",
-                  "value": "true"
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Bookings",
-      "item": [
-        {
-          "name": "Create Booking",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Cookie",
-                "value": "better-auth.session_token={{memberToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"eventId\": \"{{eventId}}\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/bookings",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "bookings"]
-            }
-          }
-        },
-        {
-          "name": "List My Bookings",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Cookie",
-                "value": "better-auth.session_token={{memberToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/bookings",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "bookings"]
-            }
+            "description": "Public endpoint - list all organizations"
           }
         }
       ]
