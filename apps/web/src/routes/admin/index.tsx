@@ -184,6 +184,15 @@ function AdminComponent() {
         <p className="text-muted-foreground">
           Welcome, {session.data?.user.name} (System Administrator)
         </p>
+        <div className="mt-4">
+          <Button
+            variant="outline"
+            onClick={() => window.location.href = "/admin/api-keys"}
+            className="mr-2"
+          >
+            Manage API Keys
+          </Button>
+        </div>
       </div>
 
       <div className="max-w-2xl mx-auto">

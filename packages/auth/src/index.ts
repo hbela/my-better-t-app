@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "@my-better-t-app/db";
-import { organization, admin } from "better-auth/plugins";
+import { organization, admin, apiKey } from "better-auth/plugins";
 
 // Log environment (loaded by server's dotenv/config)
 console.log("🔐 Auth Package - DATABASE_URL:", process.env.DATABASE_URL);
@@ -152,6 +152,9 @@ export const auth = betterAuth({
     organization({
       allowUserToCreateOrganization: false, // Only admins can create organizations
       organizationLimit: 10, // Limit per user
+    }),
+    apiKey({
+      enableMetadata: true,
     }),
   ],
   session: {

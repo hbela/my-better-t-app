@@ -65,8 +65,10 @@ function ClientDashboard() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Book an Appointment</h1>
         <p className="text-muted-foreground">
-          Welcome {session?.user?.name}! Select an organization to start
-          booking.
+          Welcome {session?.user?.name}!{" "}
+          {organizations.length === 1
+            ? `You're a member of ${organizations[0]?.name}. Click below to start booking.`
+            : "Select an organization to start booking."}
         </p>
       </div>
 

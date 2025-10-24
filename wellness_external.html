@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wellness Center - External App</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .success {
+        color: #28a745;
+        font-size: 18px;
+        margin-bottom: 20px;
+      }
+      .info {
+        background: #e3f2fd;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 20px 0;
+      }
+      .button {
+        display: inline-block;
+        background: #007bff;
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 6px;
+        margin: 10px 5px;
+        font-weight: bold;
+        transition: background-color 0.3s;
+        border: none;
+        cursor: pointer;
+      }
+      .button:hover {
+        background: #0056b3;
+      }
+      .button.primary {
+        background: #28a745;
+        font-size: 16px;
+        padding: 15px 30px;
+      }
+      .button.primary:hover {
+        background: #218838;
+      }
+      .organization-card {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        background: #f8f9fa;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🌿 Wellness Center - External Integration</h1>
+
+      <div class="success">✅ Welcome to the Wellness Center External App!</div>
+
+      <div class="info">
+        <h3>About This Integration</h3>
+        <p>
+          This is the Wellness Center's external application that securely
+          integrates with the booking system. Your API keys are protected and
+          never exposed to the browser.
+        </p>
+      </div>
+
+      <div class="organization-card">
+        <h3>🌿 Connect to Wellness Center</h3>
+        <p>Connect to the Wellness Center booking system:</p>
+
+        <button
+          id="connect-btn"
+          class="button primary"
+          onclick="connectToOrganization()"
+        >
+          🔗 Connect to Wellness Center
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Organization identifier for Wellness Center
+      // This is safe to expose as it's just an identifier, not the actual API key
+      const ORGANIZATION_ID = "wellness";
+
+      async function connectToOrganization() {
+        try {
+          // Use the secure PHP proxy instead of direct API calls
+          const response = await fetch(`connect.php?org=${ORGANIZATION_ID}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error(`Proxy verification failed: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          if (!data.success) {
+            throw new Error(data.message || "Verification failed");
+          }
+
+          console.log("Organization data:", data);
+
+          // Store the organization info
+          sessionStorage.setItem("selectedOrganization", data.organizationId);
+          sessionStorage.setItem("organizationName", data.organizationName);
+          sessionStorage.setItem("sourceOrganization", data.organization);
+
+          // Redirect to the booking system login with organization context
+          window.location.href = data.redirectUrl;
+        } catch (error) {
+          console.error("Error connecting to organization:", error);
+          alert("Failed to connect to organization. Please try again.");
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -401,7 +401,8 @@ export const ModelName = {
   Booking: 'Booking',
   Product: 'Product',
   Subscription: 'Subscription',
-  Payment: 'Payment'
+  Payment: 'Payment',
+  apikey: 'apikey'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -417,7 +418,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "organization" | "member" | "invitation" | "department" | "provider" | "event" | "booking" | "product" | "subscription" | "payment"
+    modelProps: "user" | "session" | "account" | "verification" | "organization" | "member" | "invitation" | "department" | "provider" | "event" | "booking" | "product" | "subscription" | "payment" | "apikey"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1457,6 +1458,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    apikey: {
+      payload: Prisma.$apikeyPayload<ExtArgs>
+      fields: Prisma.apikeyFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.apikeyFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$apikeyPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.apikeyFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$apikeyPayload>
+        }
+        findFirst: {
+          args: Prisma.apikeyFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$apikeyPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.apikeyFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$apikeyPayload>
+        }
+        findMany: {
+          args: Prisma.apikeyFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$apikeyPayload>[]
+        }
+        create: {
+          args: Prisma.apikeyCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$apikeyPayload>
+        }
+        createMany: {
+          args: Prisma.apikeyCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.apikeyCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$apikeyPayload>[]
+        }
+        delete: {
+          args: Prisma.apikeyDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$apikeyPayload>
+        }
+        update: {
+          args: Prisma.apikeyUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$apikeyPayload>
+        }
+        deleteMany: {
+          args: Prisma.apikeyDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.apikeyUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.apikeyUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$apikeyPayload>[]
+        }
+        upsert: {
+          args: Prisma.apikeyUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$apikeyPayload>
+        }
+        aggregate: {
+          args: Prisma.ApikeyAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateApikey>
+        }
+        groupBy: {
+          args: Prisma.apikeyGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ApikeyGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.apikeyCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ApikeyCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1699,6 +1774,23 @@ export const PaymentScalarFieldEnum = {
 export type PaymentScalarFieldEnum = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarFieldEnum]
 
 
+export const ApikeyScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  key: 'key',
+  userId: 'userId',
+  enabled: 'enabled',
+  remaining: 'remaining',
+  requestCount: 'requestCount',
+  lastRequest: 'lastRequest',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  metadata: 'metadata'
+} as const
+
+export type ApikeyScalarFieldEnum = (typeof ApikeyScalarFieldEnum)[keyof typeof ApikeyScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1707,12 +1799,37 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
 export const NullsOrder = {
   first: 'first',
   last: 'last'
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+export const QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+} as const
+
+export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
 
 
 
@@ -1760,6 +1877,20 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 /**
@@ -1863,6 +1994,7 @@ export type GlobalOmitConfig = {
   product?: Prisma.ProductOmit
   subscription?: Prisma.SubscriptionOmit
   payment?: Prisma.PaymentOmit
+  apikey?: Prisma.apikeyOmit
 }
 
 /* Types for Logging */

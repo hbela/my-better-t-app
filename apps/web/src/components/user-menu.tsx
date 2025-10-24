@@ -71,9 +71,10 @@ export default function UserMenu() {
               authClient.signOut({
                 fetchOptions: {
                   onSuccess: () => {
-                    navigate({
-                      to: "/",
-                    });
+                    // Always redirect to test-external-app.html after logout
+                    // This will be deployed as a separate static website
+                    window.location.href =
+                      "http://127.0.0.1:5500/test-external-app.html";
                   },
                 },
               });

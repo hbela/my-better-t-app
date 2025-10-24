@@ -86,3 +86,8 @@ export type Subscription = Prisma.SubscriptionModel
  * 
  */
 export type Payment = Prisma.PaymentModel
+/**
+ * Model apikey
+ * 
+ */
+export type apikey = Prisma.apikeyModel

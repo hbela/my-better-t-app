@@ -19,6 +19,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProviderCalendarRouteImport } from './routes/provider/calendar'
 import { Route as OwnerProvidersRouteImport } from './routes/owner/providers'
 import { Route as OwnerDepartmentsRouteImport } from './routes/owner/departments'
+import { Route as AdminApiKeysRouteImport } from './routes/admin/api-keys'
 import { Route as ClientOrganizationsOrgIdRouteImport } from './routes/client/organizations/$orgId'
 import { Route as ClientOrganizationsOrgIdDepartmentsDeptIdRouteImport } from './routes/client/organizations/$orgId/departments/$deptId'
 import { Route as ClientOrganizationsOrgIdDepartmentsDeptIdProvidersProviderIdRouteImport } from './routes/client/organizations/$orgId/departments/$deptId/providers/$providerId'
@@ -73,6 +74,11 @@ const OwnerDepartmentsRoute = OwnerDepartmentsRouteImport.update({
   path: '/owner/departments',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminApiKeysRoute = AdminApiKeysRouteImport.update({
+  id: '/admin/api-keys',
+  path: '/admin/api-keys',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClientOrganizationsOrgIdRoute =
   ClientOrganizationsOrgIdRouteImport.update({
     id: '/client/organizations/$orgId',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/api-keys': typeof AdminApiKeysRoute
   '/owner/departments': typeof OwnerDepartmentsRoute
   '/owner/providers': typeof OwnerProvidersRoute
   '/provider/calendar': typeof ProviderCalendarRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/api-keys': typeof AdminApiKeysRoute
   '/owner/departments': typeof OwnerDepartmentsRoute
   '/owner/providers': typeof OwnerProvidersRoute
   '/provider/calendar': typeof ProviderCalendarRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/api-keys': typeof AdminApiKeysRoute
   '/owner/departments': typeof OwnerDepartmentsRoute
   '/owner/providers': typeof OwnerProvidersRoute
   '/provider/calendar': typeof ProviderCalendarRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/reset-password'
+    | '/admin/api-keys'
     | '/owner/departments'
     | '/owner/providers'
     | '/provider/calendar'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/reset-password'
+    | '/admin/api-keys'
     | '/owner/departments'
     | '/owner/providers'
     | '/provider/calendar'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/reset-password'
+    | '/admin/api-keys'
     | '/owner/departments'
     | '/owner/providers'
     | '/provider/calendar'
@@ -192,6 +204,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  AdminApiKeysRoute: typeof AdminApiKeysRoute
   OwnerDepartmentsRoute: typeof OwnerDepartmentsRoute
   OwnerProvidersRoute: typeof OwnerProvidersRoute
   ProviderCalendarRoute: typeof ProviderCalendarRoute
@@ -274,6 +287,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OwnerDepartmentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/api-keys': {
+      id: '/admin/api-keys'
+      path: '/admin/api-keys'
+      fullPath: '/admin/api-keys'
+      preLoaderRoute: typeof AdminApiKeysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/client/organizations/$orgId': {
       id: '/client/organizations/$orgId'
       path: '/client/organizations/$orgId'
@@ -332,6 +352,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  AdminApiKeysRoute: AdminApiKeysRoute,
   OwnerDepartmentsRoute: OwnerDepartmentsRoute,
   OwnerProvidersRoute: OwnerProvidersRoute,
   ProviderCalendarRoute: ProviderCalendarRoute,

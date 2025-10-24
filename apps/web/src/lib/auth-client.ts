@@ -1,9 +1,9 @@
 import { createAuthClient } from "better-auth/react";
-import { organizationClient, adminClient } from "better-auth/client/plugins";
+import { organizationClient, adminClient, apiKeyClient } from "better-auth/client/plugins";
 
 export const authClient = createAuthClient({
   baseURL: import.meta.env.VITE_SERVER_URL,
-  plugins: [organizationClient(), adminClient()],
+  plugins: [organizationClient(), adminClient(), apiKeyClient()],
   fetchOptions: {
     credentials: "include",
   },

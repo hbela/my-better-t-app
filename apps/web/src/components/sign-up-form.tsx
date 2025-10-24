@@ -34,6 +34,57 @@ export default function SignUpForm({
           onSuccess: async (context) => {
             toast.success("Sign up successful!");
 
+            // Check if user signed up from external app with organization context
+            const externalAppOrgId = sessionStorage.getItem("externalAppOrgId");
+
+            if (externalAppOrgId) {
+              console.log("🔗 Adding user to organization:", externalAppOrgId);
+              try {
+                // Add user as member of the organization
+                const response = await fetch(
+                  `${import.meta.env.VITE_SERVER_URL}/api/members/join`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+                      organizationId: externalAppOrgId,
+                    }),
+                  }
+                );
+
+                console.log(
+                  "🔗 Join organization response:",
+                  response.status,
+                  response.statusText
+                );
+
+                if (response.ok) {
+                  const result = await response.json();
+                  console.log("✅ Successfully joined organization:", result);
+                  toast.success(
+                    "Welcome! You've been added to the organization."
+                  );
+                } else {
+                  const errorData = await response.json();
+                  console.error(
+                    "❌ Failed to add user to organization:",
+                    errorData
+                  );
+                  toast.error(
+                    "Failed to join organization. Please contact support."
+                  );
+                }
+              } catch (error) {
+                console.error("❌ Error adding user to organization:", error);
+                toast.error(
+                  "Failed to join organization. Please contact support."
+                );
+              }
+            }
+
             // Get user role from the sign-up response context
             // @ts-ignore - role is UserRole enum
             const role = context.data?.user?.role;

@@ -23,6 +23,7 @@ model User {
   providers           Provider[]
   bookings            Booking[]
   subscriptions       Subscription[]
+  apiKeys             apikey[]       @relation("ApiKeyUser")
 
   @@unique([email])
   @@map("user")
@@ -233,4 +234,25 @@ model Payment {
   subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   @@map("payment")
+}
+
+// Better Auth API Key model (as per Better Auth documentation)
+model apikey {
+  id           String    @id @default(cuid())
+  name         String?
+  key          String    @unique
+  userId       String
+  user         User      @relation("ApiKeyUser", fields: [userId], references: [id], onDelete: Cascade)
+  enabled      Boolean   @default(true)
+  remaining    Int?
+  requestCount Int       @default(0)
+  lastRequest  DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  metadata     Json?
+
+  // Indexes for performance
+  @@index([userId])
+  @@index([enabled])
+  @@index([expiresAt])
 }

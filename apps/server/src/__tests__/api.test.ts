@@ -199,4 +199,116 @@ describe("Medisched API Tests", () => {
       console.log("✅ Platform stats:", response.body.stats);
     });
   });
+
+  describe("API Key Management Tests", () => {
+    let apiKey = "";
+    let apiKeyId = "";
+
+    it("should generate API key for organization (admin only)", async () => {
+      if (!adminToken) {
+        console.log("⚠️  Skipping: Set adminToken in the test file");
+        return;
+      }
+
+      const response = await request(BASE_URL)
+        .post("/api/admin/api-keys/generate")
+        .set("Cookie", `better-auth.session_token=${adminToken}`)
+        .send({
+          organizationId: organizationId,
+          name: "Test API Key",
+          expiresInDays: 30,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("id");
+      expect(response.body).toHaveProperty("key");
+      expect(response.body).toHaveProperty("organizationId", organizationId);
+      expect(response.body).toHaveProperty("name", "Test API Key");
+
+      // Store for later tests
+      apiKey = response.body.key;
+      apiKeyId = response.body.id;
+    });
+
+    it("should list API keys (admin only)", async () => {
+      if (!adminToken) {
+        console.log("⚠️  Skipping: Set adminToken in the test file");
+        return;
+      }
+
+      const response = await request(BASE_URL)
+        .get("/api/admin/api-keys")
+        .set("Cookie", `better-auth.session_token=${adminToken}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body.length).toBeGreaterThan(0);
+
+      // Check that sensitive data is not exposed
+      const firstKey = response.body[0];
+      expect(firstKey).not.toHaveProperty("key");
+      expect(firstKey).toHaveProperty("id");
+      expect(firstKey).toHaveProperty("name");
+    });
+
+    it("should validate API key authentication", async () => {
+      if (!apiKey) {
+        console.log("⚠️  Skipping: No API key available");
+        return;
+      }
+
+      const response = await request(BASE_URL)
+        .get("/api/external/verify")
+        .set("X-API-Key", apiKey);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("organizationId", organizationId);
+      expect(response.body).toHaveProperty("organizationName");
+      expect(response.body).toHaveProperty("redirectUrl");
+    });
+
+    it("should reject invalid API key", async () => {
+      const response = await request(BASE_URL)
+        .get("/api/external/verify")
+        .set("X-API-Key", "invalid-key");
+
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty("error", "Invalid API key");
+    });
+
+    it("should reject requests without API key", async () => {
+      const response = await request(BASE_URL).get("/api/external/verify");
+
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty("error", "API key required");
+    });
+
+    it("should revoke API key (admin only)", async () => {
+      if (!adminToken || !apiKeyId) {
+        console.log("⚠️  Skipping: No admin token or API key ID available");
+        return;
+      }
+
+      const response = await request(BASE_URL)
+        .delete(`/api/admin/api-keys/${apiKeyId}`)
+        .set("Cookie", `better-auth.session_token=${adminToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("success", true);
+    });
+
+    it("should reject revoked API key", async () => {
+      if (!apiKey) {
+        console.log("⚠️  Skipping: No API key available");
+        return;
+      }
+
+      const response = await request(BASE_URL)
+        .get("/api/external/verify")
+        .set("X-API-Key", apiKey);
+
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty("error", "Invalid API key");
+    });
+  });
 });

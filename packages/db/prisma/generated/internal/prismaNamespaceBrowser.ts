@@ -61,7 +61,8 @@ export const ModelName = {
   Booking: 'Booking',
   Product: 'Product',
   Subscription: 'Subscription',
-  Payment: 'Payment'
+  Payment: 'Payment',
+  apikey: 'apikey'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -283,6 +284,23 @@ export const PaymentScalarFieldEnum = {
 export type PaymentScalarFieldEnum = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarFieldEnum]
 
 
+export const ApikeyScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  key: 'key',
+  userId: 'userId',
+  enabled: 'enabled',
+  remaining: 'remaining',
+  requestCount: 'requestCount',
+  lastRequest: 'lastRequest',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  metadata: 'metadata'
+} as const
+
+export type ApikeyScalarFieldEnum = (typeof ApikeyScalarFieldEnum)[keyof typeof ApikeyScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -291,10 +309,35 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
 export const NullsOrder = {
   first: 'first',
   last: 'last'
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+export const QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+} as const
+
+export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
 

@@ -32,9 +32,16 @@ app.use((req, res, next) => {
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "",
+    origin: [
+      process.env.CORS_ORIGIN || "",
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "http://localhost:5500",
+      "http://127.0.0.1:5500",
+      "file://",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-API-Key"],
     credentials: true,
   })
 );
@@ -175,6 +182,137 @@ const requireEnabledOrganization = async (
   }
 
   next();
+};
+
+// API Key validation middleware for external apps
+const validateApiKey = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const apiKey = req.headers["x-api-key"] as string;
+
+  if (!apiKey) {
+    return res.status(401).json({ error: "API key required" });
+  }
+
+  try {
+    console.log("🔑 Validating API key:", apiKey.substring(0, 10) + "...");
+
+    // Debug: Check what API keys exist in the database
+    const allApiKeys = await prisma.apikey.findMany({
+      select: {
+        id: true,
+        key: true,
+        enabled: true,
+        expiresAt: true,
+        metadata: true,
+      },
+    });
+    console.log("🔍 All API keys in database:", allApiKeys);
+    console.log(
+      "🔍 Metadata for each key:",
+      allApiKeys.map((k) => ({
+        key: k.key.substring(0, 10) + "...",
+        metadata: k.metadata,
+      }))
+    );
+
+    // Find the API key in Better Auth's table
+    console.log("🔍 Searching for API key:", apiKey);
+
+    // Find by the full key (stored in the key field)
+    const apiKeyRecord = await prisma.apikey.findFirst({
+      where: {
+        key: apiKey,
+        enabled: true,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+    });
+
+    console.log(
+      "🔍 API key match result:",
+      apiKeyRecord ? "Found" : "Not found"
+    );
+
+    if (!apiKeyRecord) {
+      console.log("❌ API key verification failed");
+      console.log("🔍 Searched for key:", apiKey);
+      console.log(
+        "🔍 Available keys:",
+        allApiKeys.map((k) => ({
+          key: k.key,
+          enabled: k.enabled,
+          expiresAt: k.expiresAt,
+        }))
+      );
+      return res.status(401).json({ error: "Invalid API key" });
+    }
+
+    console.log("✅ API key verified successfully:", apiKeyRecord.id);
+
+    // Get organization ID from the API key metadata
+    let organizationId;
+    try {
+      console.log("🔍 Raw metadata:", apiKeyRecord.metadata);
+
+      // Handle metadata - it could be a string or already parsed object
+      let metadata;
+      if (typeof apiKeyRecord.metadata === "string") {
+        metadata = JSON.parse(apiKeyRecord.metadata);
+      } else {
+        metadata = apiKeyRecord.metadata;
+      }
+
+      console.log("🔍 Parsed metadata:", metadata);
+      organizationId = metadata.organizationId;
+      console.log("🔍 Extracted organizationId:", organizationId);
+    } catch (error) {
+      console.error("Error parsing API key metadata:", error);
+      organizationId = null;
+    }
+
+    if (!organizationId) {
+      return res
+        .status(401)
+        .json({ error: "API key missing organization metadata" });
+    }
+
+    // Verify organization exists and is enabled
+    const organization = await prisma.organization.findUnique({
+      where: { id: organizationId },
+    });
+
+    if (!organization) {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+
+    if (!organization.enabled) {
+      return res.status(403).json({
+        error:
+          "Organization is not enabled. Please complete subscription to activate.",
+      });
+    }
+
+    // Attach organization context to request
+    // @ts-ignore
+    req.organizationId = organizationId;
+    // @ts-ignore
+    req.organization = organization;
+    // @ts-ignore
+    req.apiKey = apiKeyRecord;
+
+    // Update last used timestamp in Better Auth's table
+    await prisma.apikey.update({
+      where: { id: apiKeyRecord.id },
+      data: { lastRequest: new Date() },
+    });
+
+    next();
+  } catch (error) {
+    console.error("API key validation error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 };
 
 // ==================== AUTH ROUTES ====================
@@ -1919,31 +2057,45 @@ app.delete("/api/bookings/:id", requireAuth, async (req, res) => {
 
 // ==================== CLIENT ROUTES ====================
 
-// Get all organizations (public for clients)
-app.get("/api/client/organizations", requireAuth, async (_req, res) => {
+// Get organizations that the user is a member of
+app.get("/api/client/organizations", requireAuth, async (req, res) => {
   try {
-    const organizations = await prisma.organization.findMany({
+    // @ts-ignore
+    const user = req.user;
+
+    // Get organizations where the user is a member
+    const memberships = await prisma.member.findMany({
       where: {
-        enabled: true, // Only show enabled organizations
+        userId: user.id,
+        organization: {
+          enabled: true, // Only show enabled organizations
+        },
       },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        _count: {
+      include: {
+        organization: {
           select: {
-            departments: true,
+            id: true,
+            name: true,
+            description: true,
+            _count: {
+              select: {
+                departments: true,
+              },
+            },
           },
         },
       },
-      orderBy: {
-        name: "asc",
-      },
     });
+
+    // Extract organizations from memberships
+    const organizations = memberships
+      .map((membership) => membership.organization)
+      .filter((org) => org !== null) // Filter out null organizations (disabled ones)
+      .sort((a, b) => a.name.localeCompare(b.name));
 
     res.json(organizations);
   } catch (error) {
-    console.error("Error fetching organizations:", error);
+    console.error("Error fetching user organizations:", error);
     res.status(500).json({ error: "Failed to fetch organizations" });
   }
 });
@@ -2543,6 +2695,322 @@ app.delete(
     }
   }
 );
+
+// ==================== DEBUG ENDPOINTS ====================
+
+// Debug endpoint to check authentication status
+app.get("/api/debug/auth", async (req, res) => {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+
+    if (!session) {
+      return res.json({
+        authenticated: false,
+        error: "No session found",
+        headers: req.headers,
+        cookies: req.headers.cookie,
+      });
+    }
+
+    return res.json({
+      authenticated: true,
+      user: {
+        id: session.user.id,
+        email: session.user.email,
+        role: session.user.role,
+        name: session.user.name,
+      },
+      session: {
+        id: session.session.id,
+        expiresAt: session.session.expiresAt,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      authenticated: false,
+      error: error.message,
+      stack: error.stack,
+    });
+  }
+});
+
+// ==================== API KEY MANAGEMENT ====================
+
+// Generate API key for organization (admin only)
+app.post(
+  "/api/admin/api-keys/generate",
+  requireAuth,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const { organizationId, name, expiresInDays } = req.body;
+      // @ts-ignore
+      const adminUser = req.user;
+
+      if (!organizationId || !name) {
+        return res
+          .status(400)
+          .json({ error: "Organization ID and name are required" });
+      }
+
+      // Verify organization exists
+      const organization = await prisma.organization.findUnique({
+        where: { id: organizationId },
+      });
+
+      if (!organization) {
+        return res.status(404).json({ error: "Organization not found" });
+      }
+
+      // Calculate expiration date if provided
+      const expiresAt = expiresInDays
+        ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
+        : null;
+
+      // Generate API key using Better Auth (server-side with userId)
+      console.log("🔑 Creating API key for organization:", organizationId);
+      console.log(
+        "🔑 Admin user:",
+        adminUser.id,
+        adminUser.email,
+        adminUser.role
+      );
+
+      // Generate API key manually to ensure correct format
+      let keyData;
+      try {
+        // Create the full API key in the expected format: org-{organizationId}{randomKey}
+        const randomKey = crypto.randomBytes(32).toString("base64url");
+        const fullApiKey = `org-${organizationId.substring(0, 8)}${randomKey}`;
+
+        // Create the API key record directly in the database
+        const apiKeyRecord = await prisma.apikey.create({
+          data: {
+            id: crypto.randomUUID(),
+            name,
+            key: fullApiKey, // Store the full combined key
+            userId: adminUser.id,
+            enabled: true,
+            remaining: 1000,
+            requestCount: 0,
+            expiresAt: expiresAt,
+            metadata: JSON.stringify({ organizationId }),
+            createdAt: new Date(),
+          },
+        });
+
+        keyData = {
+          id: apiKeyRecord.id,
+          key: fullApiKey,
+          name: apiKeyRecord.name,
+          remaining: apiKeyRecord.remaining,
+          expiresAt: apiKeyRecord.expiresAt,
+          createdAt: apiKeyRecord.createdAt,
+        };
+
+        console.log("✅ Better Auth API key created successfully:", keyData.id);
+      } catch (apiKeyError) {
+        console.error("❌ Better Auth API key creation failed:", apiKeyError);
+        throw apiKeyError;
+      }
+
+      if (!keyData) {
+        return res.status(500).json({ error: "Failed to generate API key" });
+      }
+
+      // Better Auth handles all API key storage and management
+      // We just need to return the generated key with organization info
+      res.json({
+        id: keyData.id,
+        name,
+        key: keyData.key, // Only shown once at generation
+        organizationId,
+        expiresAt: keyData.expiresAt,
+        createdAt: keyData.createdAt,
+        remaining: keyData.remaining,
+      });
+    } catch (error) {
+      console.error("Error generating API key:", error);
+      res.status(500).json({ error: "Failed to generate API key" });
+    }
+  }
+);
+
+// List all API keys (admin only)
+app.get("/api/admin/api-keys", requireAuth, requireAdmin, async (_req, res) => {
+  try {
+    const apiKeys = await prisma.apikey.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // Remove sensitive key data from response
+    const safeApiKeys = apiKeys.map((key) => ({
+      id: key.id,
+      name: key.name,
+      metadata: key.metadata,
+      userId: key.userId,
+      user: key.user,
+      createdAt: key.createdAt,
+      expiresAt: key.expiresAt,
+      lastRequest: key.lastRequest,
+      enabled: key.enabled,
+      remaining: key.remaining,
+      requestCount: key.requestCount,
+    }));
+
+    res.json(safeApiKeys);
+  } catch (error) {
+    console.error("Error fetching API keys:", error);
+    res.status(500).json({ error: "Failed to fetch API keys" });
+  }
+});
+
+// Revoke API key (admin only)
+app.delete(
+  "/api/admin/api-keys/:keyId",
+  requireAuth,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const { keyId } = req.params;
+
+      // Deactivate the API key in Better Auth's table
+      await prisma.apikey.update({
+        where: { id: keyId },
+        data: { enabled: false },
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error revoking API key:", error);
+      res.status(500).json({ error: "Failed to revoke API key" });
+    }
+  }
+);
+
+// ==================== MEMBER MANAGEMENT ====================
+
+// Join organization (for users signing up from external apps)
+app.post("/api/members/join", requireAuth, async (req, res) => {
+  try {
+    const { organizationId } = req.body;
+    // @ts-ignore
+    const user = req.user;
+
+    console.log("🔗 Member join request:", {
+      organizationId,
+      userId: user?.id,
+      userEmail: user?.email,
+    });
+
+    if (!organizationId) {
+      return res.status(400).json({ error: "Organization ID is required" });
+    }
+
+    // Verify organization exists and is enabled
+    const organization = await prisma.organization.findUnique({
+      where: { id: organizationId },
+    });
+
+    if (!organization) {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+
+    if (!organization.enabled) {
+      return res.status(403).json({
+        error:
+          "Organization is not enabled. Please complete subscription to activate.",
+      });
+    }
+
+    // Check if user is already a member
+    const existingMember = await prisma.member.findUnique({
+      where: {
+        organizationId_userId: {
+          organizationId,
+          userId: user.id,
+        },
+      },
+    });
+
+    if (existingMember) {
+      return res.json({
+        success: true,
+        message: "User is already a member of this organization",
+      });
+    }
+
+    // Add user as member of the organization
+    console.log("🔗 Creating member record:", {
+      organizationId,
+      userId: user.id,
+      email: user.email,
+    });
+
+    const member = await prisma.member.create({
+      data: {
+        id: crypto.randomUUID(),
+        organizationId,
+        userId: user.id,
+        email: user.email,
+        createdAt: new Date(),
+      },
+    });
+
+    console.log("✅ Member created successfully:", member.id);
+
+    res.json({
+      success: true,
+      message: "Successfully joined organization",
+      organization: {
+        id: organization.id,
+        name: organization.name,
+        slug: organization.slug,
+      },
+    });
+  } catch (error) {
+    console.error("Error joining organization:", error);
+    res.status(500).json({ error: "Failed to join organization" });
+  }
+});
+
+// ==================== EXTERNAL APP VERIFICATION ====================
+
+// Verify external app and return organization info (for redirect to React app)
+app.get("/api/external/verify", validateApiKey, async (req, res) => {
+  try {
+    // @ts-ignore
+    const organizationId = req.organizationId;
+    // @ts-ignore
+    const organization = req.organization;
+
+    // Return organization info for the external app to use in redirect
+    res.json({
+      organizationId,
+      organizationName: organization.name,
+      organizationSlug: organization.slug,
+      redirectUrl: `${
+        process.env.CORS_ORIGIN
+      }/login?org=${organizationId}&referrer=${encodeURIComponent(
+        req.headers.referer || ""
+      )}`,
+    });
+  } catch (error) {
+    console.error("Error verifying external app:", error);
+    res.status(500).json({ error: "Failed to verify external app" });
+  }
+});
 
 // ==================== HELPER FUNCTIONS ====================
 
@@ -3319,11 +3787,84 @@ app.post("/api/test-email", async (req, res) => {
   }
 });
 
+// ==================== STATIC FILE SERVING ====================
+
+// Serve static files from the web app build directory
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Get the directory of the current module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve static files from the web app's dist directory
+const webAppPath = path.join(__dirname, "../../web/dist");
+app.use(express.static(webAppPath));
+
+// Security: Disable directory listing
+app.use((req, res, next) => {
+  // Block requests to sensitive files and directories
+  const blockedPaths = [
+    "/node_modules",
+    "/src",
+    "/packages",
+    "/apps",
+    "/docs",
+    "/.git",
+    "/.env",
+    "/package.json",
+    "/tsconfig.json",
+    "/turbo.json",
+    "/pnpm-lock.yaml",
+    "/pnpm-workspace.yaml",
+  ];
+
+  const requestedPath = req.path.toLowerCase();
+
+  // Check if the request is for a blocked path
+  const isBlocked = blockedPaths.some((blockedPath) =>
+    requestedPath.startsWith(blockedPath.toLowerCase())
+  );
+
+  if (isBlocked) {
+    console.log(`🚫 Blocked access to sensitive path: ${req.path}`);
+    return res.status(403).json({
+      error: "Access denied",
+      message: "This path is not accessible",
+    });
+  }
+
+  next();
+});
+
+// Handle SPA routing - serve index.html for non-API routes
+// Use a middleware approach that works with Express 5.x
+app.use((req, res, next) => {
+  // Skip API routes
+  if (req.path.startsWith("/api/")) {
+    return next();
+  }
+
+  // Skip static file requests (already handled by express.static)
+  if (req.path.includes(".")) {
+    return next();
+  }
+
+  // For all other routes, serve the React app
+  res.sendFile(path.join(webAppPath, "index.html"), (err) => {
+    if (err) {
+      console.error("Error serving SPA:", err);
+      res.status(404).json({ error: "Page not found" });
+    }
+  });
+});
+
 // ==================== START SERVER ====================
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`🚀 Server is running on port ${port}`);
+  console.log(`📁 Serving static files from: ${webAppPath}`);
   console.log(
     `📧 Email service: ${
       process.env.RESEND_API_KEY ? "Configured" : "Not configured"
