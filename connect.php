@@ -2,6 +2,9 @@
 // connect.php - Secure API Key Proxy for External Apps
 // This proxy handles multiple organizations and their API keys securely
 
+// Start session for secure validation
+session_start();
+
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *"); // Adjust or remove for production
 header("Access-Control-Allow-Methods: GET, POST");
@@ -16,7 +19,7 @@ $FRONTEND_REDIRECT = "http://localhost:3001/login";
 $ORGANIZATION_API_KEYS = [
     // Organization 1: Wellness Center
     "wellness" => [
-        "api_key" => "org-6f9f21270aUMj9hxBCFFJba-k1Nb5gcuESHxSGpptcOhLNoNFtM",
+        "api_key" => "org-6f9f21273PR9udaKMOeKt07cqXDHY6-nND4QyD1OElGasPPGYIs",
         "name" => "Wellness Center",
         "organization_id" => "6f9f2127-2270-46d0-80a3-a1680dfb7044"
     ],
@@ -50,13 +53,20 @@ elseif (isset($_SERVER['HTTP_X_ORGANIZATION_ID'])) {
     $organizationId = $_SERVER['HTTP_X_ORGANIZATION_ID'];
 }
 
+// Debug logging
+error_log("PHP Debug - Organization ID: " . ($organizationId ?? 'null'));
+error_log("PHP Debug - Available organizations: " . implode(', ', array_keys($ORGANIZATION_API_KEYS)));
+
 // ---- Validate organization ----
 if (!$organizationId || !isset($ORGANIZATION_API_KEYS[$organizationId])) {
     http_response_code(400);
     echo json_encode([
         "success" => false,
         "message" => "Invalid or missing organization identifier",
-        "available_organizations" => array_keys($ORGANIZATION_API_KEYS)
+        "debug" => [
+            "organizationId" => $organizationId,
+            "available_organizations" => array_keys($ORGANIZATION_API_KEYS)
+        ]
     ]);
     exit;
 }
@@ -101,12 +111,19 @@ if (!$data || !isset($data['organizationId'])) {
     exit;
 }
 
-// ---- Prepare JSON output ----
+// ---- Set secure session data ----
+$_SESSION['validated_organization'] = $data['organizationId'];
+$_SESSION['organization_slug'] = $organizationId;
+$_SESSION['api_key_validated'] = true;
+$_SESSION['expires_at'] = time() + 3600; // 1 hour expiration
+$_SESSION['organization_name'] = $data['organizationName'];
+
+// ---- Prepare JSON output with clean redirect ----
 echo json_encode([
     "success" => true,
     "organizationId" => $data['organizationId'],
     "organizationName" => $data['organizationName'],
     "organization" => $organizationId,
-    "redirectUrl" => $FRONTEND_REDIRECT . "?org=" . urlencode($data['organizationId']) . "&source=" . urlencode($organizationId)
+    "redirectUrl" => $FRONTEND_REDIRECT . "?validated=true" // Clean URL - no sensitive data
 ]);
 exit;

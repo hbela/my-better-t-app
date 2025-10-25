@@ -2987,6 +2987,30 @@ app.post("/api/members/join", requireAuth, async (req, res) => {
 
 // ==================== EXTERNAL APP VERIFICATION ====================
 
+// Session validation endpoint for PHP proxy
+app.get("/api/external/validate-session", async (req, res) => {
+  try {
+    // This endpoint would need to check the PHP session
+    // For now, we'll implement a simple token-based approach
+    const { sessionToken } = req.query;
+
+    if (!sessionToken) {
+      return res.status(401).json({ error: "Session token required" });
+    }
+
+    // In a real implementation, you'd validate the session token
+    // against your session store (Redis, database, etc.)
+    // For now, we'll return a placeholder response
+    res.json({
+      valid: true,
+      message: "Session validation endpoint - implement session checking",
+    });
+  } catch (error) {
+    console.error("Error validating session:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Verify external app and return organization info (for redirect to React app)
 app.get("/api/external/verify", validateApiKey, async (req, res) => {
   try {
