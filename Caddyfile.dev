@@ -9,7 +9,7 @@
 # Note: On Windows, binding to port 80 may require administrator privileges
 http://wellness.hu {
 	encode gzip
-	
+
 	# Proxy API requests to backend server
 	# Fastify server is configured with trustProxy: true and requestTimeout: 30000
 	# Caddy automatically forwards X-Forwarded-* headers, but we set explicit timeouts
@@ -26,7 +26,13 @@ http://wellness.hu {
 			health_timeout 5s
 		}
 	}
-	
+
+	# JetBrains IDE URLs include the project folder in the path. Strip it when
+	# proxying to the static dev server, whose root is this repository.
+	handle_path /booking-for-all/* {
+		reverse_proxy 127.0.0.1:5502
+	}
+
 	# All other requests go to Live Server
 	handle {
 		reverse_proxy 127.0.0.1:5502
@@ -38,7 +44,7 @@ http://wellness.hu {
 # Note: On Windows, binding to port 80 may require administrator privileges
 http://medicare.hu {
 	encode gzip
-	
+
 	# Proxy API requests to backend server
 	# Fastify server is configured with trustProxy: true and requestTimeout: 30000
 	# Caddy automatically forwards X-Forwarded-* headers, but we set explicit timeouts
@@ -55,10 +61,15 @@ http://medicare.hu {
 			health_timeout 5s
 		}
 	}
-	
+
+	# JetBrains IDE URLs include the project folder in the path. Strip it when
+	# proxying to the static dev server, whose root is this repository.
+	handle_path /booking-for-all/* {
+		reverse_proxy 127.0.0.1:5502
+	}
+
 	# All other requests go to Live Server
 	handle {
 		reverse_proxy 127.0.0.1:5502
 	}
 }
-

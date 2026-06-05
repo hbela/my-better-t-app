@@ -5,10 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wellness Center - Local Dev</title>
     <script>
-      // Auto-redirect to Caddy URL if not already on wellness.hu
+      // Auto-redirect to Caddy URL if not already on wellness.hu.
+      // JetBrains serves projects with a /booking-for-all prefix; Caddy serves
+      // this repo from its root, so strip that prefix when redirecting.
       if (window.location.hostname !== "wellness.hu") {
+        const caddyPath = window.location.pathname.replace(
+          /^\/booking-for-all(?=\/)/,
+          ""
+        );
         window.location.href =
-          "http://wellness.hu" + window.location.pathname + window.location.search;
+          "http://wellness.hu" + caddyPath + window.location.search;
       }
     </script>
     <style>
@@ -190,7 +196,7 @@
           integrates with the booking system.
         </p>
         <p style="margin-top: 8px; font-size: 12px; color: #666;">
-          Served via Caddy: http://wellness.hu &rarr; localhost:3001<br />
+          Served via Caddy: http://wellness.hu &rarr; localhost:5502<br />
           API: localhost:3000 (or ngrok)<br />
           Frontend: localhost:3001
         </p>
