@@ -11,9 +11,12 @@ build:
     export VITE_SENTRY_RELEASE="${VITE_SENTRY_RELEASE}"
     export VITE_ENVIRONMENT="${VITE_ENVIRONMENT:-production}"
     export VITE_SERVER_URL="${VITE_SERVER_URL:-https://api.appointer.hu}"
-    # Consumed by scripts/generate-sitemap.js; without it the sitemap falls back
-    # to the webdev.* dev host and would publish dev URLs to search engines.
-    export SITE_URL="${SITE_URL:-https://app.appointer.hu}"
+    # Consumed by scripts/generate-sitemap.js — this is the host that ends up in
+    # sitemap.xml, so it must be the hostname actually serving the app.
+    # NOTE: webdev.appointer.hu is the live web host today. app.appointer.hu
+    # resolves to the same server but has no Coolify service bound (HTTP 404,
+    # no Let's Encrypt cert). Change this only when that domain is cut over.
+    export SITE_URL="${SITE_URL:-https://webdev.appointer.hu}"
     echo "🔍 Build-time env vars:"
     echo "  VITE_SENTRY_DSN=${VITE_SENTRY_DSN:0:50}..."
     echo "  VITE_SENTRY_RELEASE=${VITE_SENTRY_RELEASE}"
@@ -33,7 +36,7 @@ environment:
   VITE_SENTRY_DSN: ${VITE_SENTRY_DSN}
   VITE_SENTRY_RELEASE: ${VITE_SENTRY_RELEASE}
   VITE_ENVIRONMENT: production
-  SITE_URL: https://app.appointer.hu
+  SITE_URL: https://webdev.appointer.hu
 ports:
   - 4173
 

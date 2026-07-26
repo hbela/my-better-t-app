@@ -28,7 +28,7 @@ DATABASE_URL=prisma+postgres://accelerate-url-here
 Since you're using direct connections in development, regenerate Prisma Client **without** `--no-engine`:
 
 ```bash
-pnpm --filter @booking-for-all/db exec prisma generate
+pnpm --filter @booking-for-all/db run db:generate
 ```
 
 This generates Prisma Client with the query engine included, allowing direct PostgreSQL connections.
@@ -51,7 +51,7 @@ In production, use:
 - `DATABASE_URL` with `prisma://` or `prisma+postgres://` URL
 - Generate Prisma Client with `--no-engine`:
   ```bash
-  pnpm --filter @booking-for-all/db exec prisma generate --no-engine
+  pnpm --filter @booking-for-all/db run db:generate:prod
   ```
 
 ## Troubleshooting

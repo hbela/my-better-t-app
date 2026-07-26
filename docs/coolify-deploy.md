@@ -10,7 +10,7 @@
 1. Clone the repository to a workstation with Node 20+ and PNPM 10+: `git clone https://github.com/hbela/booking-for-all.git && cd booking-for-all`.
 2. Make sure the Turbo cache is up to date by running `pnpm install` once locally.
 3. Run a production smoke build (and ensure Prisma Client artifacts are available):
-   - `pnpm --filter @booking-for-all/db exec prisma generate --no-engine`
+   - `pnpm --filter @booking-for-all/db run db:generate:prod`
    - `pnpm turbo run build --filter=server`
    - `pnpm turbo run build --filter=web`
    Correct any failures before continuing.
@@ -36,7 +36,7 @@ Add the following variables in Coolify -> Project -> Environment. Use the same v
 | `STRIPE_WEBHOOK_SECRET` | Conditional | Verifies the `/webhooks/stripe` signature.
 | `STRIPE_PRICE_ID_MONTHLY` | Conditional | Price used for the monthly plan.
 | `STRIPE_PRICE_ID_YEARLY` | Conditional | Price used for the yearly plan.
-| `SITE_URL` | Recommended | Public web origin used to generate `sitemap.xml` at build time. **Without it the sitemap falls back to `https://webdev.appointer.hu`,** which would publish dev URLs to search engines.
+| `SITE_URL` | Recommended | Public web origin baked into `sitemap.xml` at build time. Must match the host actually serving the app — currently `https://webdev.appointer.hu` (see note below).
 | `RATE_LIMIT_*` | Optional | Fine-tune external API rate limits (`RATE_LIMIT_MAX_REQUESTS`, etc.).
 | `LOG_LEVEL` | Optional | Defaults to `info`.
 | `S3_ENDPOINT` | Conditional | S3-compatible storage endpoint (required for QR codes and file uploads). Get from Coolify S3 storage resource.
@@ -66,7 +66,12 @@ See `docs/coolify-s3-next-steps.md` for detailed instructions.
   - Exposes port `3000`; Coolify will proxy HTTP and HTTPS automatically when the domain is verified.
   - Start command runs `pnpm --filter server run start`; `HOST=0.0.0.0` is pre-configured.
   - Remember to enable HTTPS in Coolify (toggle Let's Encrypt once DNS is live).
-- **web (`app.appointer.hu`)**
+- **web (live host: `webdev.appointer.hu`)**
+  - ⚠️ `coolify/web.yaml` still declares `domains: [app.appointer.hu]`, but that hostname has no
+    Coolify service bound to it: it resolves to the same server yet returns HTTP 404 and presents an
+    untrusted certificate (Let's Encrypt was never issued). The app is actually served from
+    `webdev.appointer.hu`. Either bind and cut over to `app.appointer.hu`, or make `webdev` official
+    and update `domains`, `SITE_URL` and `CORS_ORIGIN`/`FRONTEND_URL` to match.
   - Build pipeline installs PNPM/Turbo, then runs `vite build` + Puppeteer prerender + sitemap generation.
   - Served by the Express server in `apps/web/server.js` on port `4173` (`pnpm --filter web run start`).
     It serves static assets, `/sitemap.xml`, a `/health` endpoint, and the SPA fallback.
@@ -96,7 +101,7 @@ See `docs/coolify-s3-next-steps.md` for detailed instructions.
 - Legacy PHP endpoint: call a known route to confirm the document root is correct.
 
 ## 7. Ongoing Operations
-- To ship new backend migrations or schema changes: push to `main`, then redeploy the server service; the build step runs `pnpm --filter @booking-for-all/db exec prisma generate --no-engine` followed by `pnpm turbo run build --filter=server` to refresh Prisma artifacts.
+- To ship new backend migrations or schema changes: push to `main`, then redeploy the server service; the build step runs `pnpm --filter @booking-for-all/db run db:generate:prod` followed by `pnpm turbo run build --filter=server` to refresh Prisma artifacts.
 - Use Coolify deployment hooks or webhooks from GitHub for auto-deploys.
 - Monitor resource usage from Infrastructure -> Servers; upgrade the VPS or adjust limits if CPU throttling occurs.
 - Keep PNPM/Turbo versions in `coolify/*.yaml` aligned with `package.json`. Update the YAML and redeploy if you bump the toolchain.
