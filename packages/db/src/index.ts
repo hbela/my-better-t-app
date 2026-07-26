@@ -85,7 +85,6 @@ console.log(
 
 // Check if using Accelerate (prisma+postgres://) or Data Proxy (prisma://)
 const isAccelerateUrl = databaseUrl.startsWith("prisma+postgres://");
-const isDataProxyUrl = databaseUrl.startsWith("prisma://");
 
 // Create base Prisma Client
 const basePrismaClient = new PrismaClient({

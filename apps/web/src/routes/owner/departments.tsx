@@ -51,7 +51,7 @@ export const Route = createFileRoute("/owner/departments")({
     // If user is ADMIN, redirect to admin dashboard
     if (role === "ADMIN") {
       throw redirect({
-        to: "/admin/",
+        to: "/admin",
       });
     }
 
@@ -208,10 +208,10 @@ function DepartmentsComponent() {
   });
 
   // TanStack Form for create department
-  const form = useForm<CreateDepartmentData>({
+  const form = useForm({
     defaultValues: {
       name: "",
-    },
+    } satisfies CreateDepartmentData,
     onSubmit: async ({ value }) => {
       if (!selectedOrgId) {
         toast.error(t("owner.pleaseSelectOrganization"));

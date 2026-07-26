@@ -4,7 +4,7 @@ import prisma from "@booking-for-all/db";
 import crypto from "crypto";
 import { hashPassword } from "better-auth/crypto";
 import { requireAuthHook, requireAdminHook } from "../../plugins/authz";
-import { AppError } from "../../errors/AppError";
+import { AppError, isAppError } from "../../errors/AppError";
 
 // Zod Schemas
 const CreateOrganizationSchema = z.object({
@@ -56,6 +56,14 @@ const CreateUserSchema = z.object({
     .optional()
     .default("USER"),
 });
+
+/**
+ * Generates a cryptographically-random temporary password.
+ * The trailing suffix guarantees the mixed-case/digit/symbol complexity rules.
+ */
+function generateTempPassword(): string {
+  return crypto.randomBytes(12).toString("base64url") + "Aa1!";
+}
 
 const adminRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
@@ -136,7 +144,7 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
         }
 
         // Create owner user with temporary password
-        const tempPassword = "ownerpass321";
+        const tempPassword = generateTempPassword();
         const hashedPassword = await hashPassword(tempPassword);
 
         const { organization, ownerUser } = await prisma.$transaction(async (tx) => {
@@ -256,12 +264,6 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
           const phpServerUrl =
             process.env.PHP_SERVER_URL || "http://localhost:8000";
           const externalPageUrl = `${phpServerUrl}/${normalizedSlug}_external.html`;
-
-          const frontendUrl =
-            process.env.CORS_ORIGIN ||
-            process.env.FRONTEND_URL ||
-            "http://localhost:3001";
-          const loginUrl = `${frontendUrl}/login`;
 
           const lang = req.language || "en";
 
@@ -501,7 +503,7 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
           message: "Organization deleted successfully",
         });
       } catch (error) {
-        if (error.isAppError) {
+        if (isAppError(error)) {
           throw error;
         }
         app.log.error(error, "Error deleting organization");
@@ -634,7 +636,7 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         throw new AppError("API key not found", "API_KEY_NOT_FOUND", 404);
       } catch (error) {
-        if (error.isAppError) {
+        if (isAppError(error)) {
           throw error;
         }
         app.log.error(error, "Error revoking API key");
@@ -668,7 +670,7 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
           );
         }
 
-        const tempPassword = Math.random().toString(36).slice(-10) + "Aa1!";
+        const tempPassword = generateTempPassword();
 
         const user = await prisma.user.create({
           data: {
@@ -701,7 +703,7 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
           data: { user, tempPassword },
         });
       } catch (error) {
-        if (error.isAppError) {
+        if (isAppError(error)) {
           throw error;
         }
         app.log.error(error, "Error creating admin user");

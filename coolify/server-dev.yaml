@@ -1,6 +1,6 @@
 name: server-dev
 type: nodejs
-repository: https://github.com/hbela/my-better-t-app.git
+repository: https://github.com/hbela/booking-for-all.git
 branch: dev
 root_directory: .
 # Note: If using Docker build pack in Coolify, specify Dockerfile path as: apps/server/Dockerfile.dev

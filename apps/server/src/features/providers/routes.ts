@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import prisma from "@booking-for-all/db";
-import { requireAuthHook, orgGuard } from "../../plugins/authz";
+import { requireAuthHook } from "../../plugins/authz";
 
 const providersRoutes: FastifyPluginAsync = async (app) => {
   app.get("/", { 

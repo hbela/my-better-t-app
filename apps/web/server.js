@@ -9,6 +9,7 @@ const __dirname = dirname(__filename);
 const app = express();
 const port = process.env.PORT || 4173;
 const distPath = resolve(__dirname, 'dist');
+const prerenderPath = resolve(distPath, '__prerendered__');
 
 // Add request logging middleware
 app.use((req, res, next) => {
@@ -38,8 +39,8 @@ app.get('/debug/status', (req, res) => {
     distPath,
     distExists: existsSync(distPath),
     indexHtmlExists: existsSync(resolve(distPath, 'index.html')),
-    loginDirExists: existsSync(resolve(distPath, 'login')),
-    loginIndexExists: existsSync(resolve(distPath, 'login', 'index.html')),
+    prerenderDirExists: existsSync(prerenderPath),
+    prerenderedHomeExists: existsSync(resolve(prerenderPath, 'index.html')),
     assetsDirExists: existsSync(resolve(distPath, 'assets')),
     env: {
       PORT: process.env.PORT,
@@ -84,22 +85,22 @@ app.get('*', (req, res, next) => {
     return next();
   }
 
-  // TEMPORARILY DISABLED: Prerendering check (to debug blank page issue)
-  // Check if request is from a crawler/bot (for SEO)
-  // const userAgent = req.get('user-agent') || '';
-  // const isCrawler = /bot|crawler|spider|crawling|googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|sogou|exabot|facebot|ia_archiver|facebookexternalhit|twitterbot|linkedinbot|whatsapp|applebot|flipboard|tumblr|bitlybot|skypeuripreview|nuzzel|quora link preview|pinterest|slackbot|vkShare|W3C_Validator|redditbot/i.test(userAgent);
-  
-  // TEMPORARILY DISABLED: Serve prerendered file to crawlers for SEO
-  // if (isCrawler) {
-  //   const prerenderedPath = resolve(distPath, normalizedPath, 'index.html');
-  //   if (existsSync(prerenderedPath)) {
-  //     console.log(`🤖 Serving prerendered to crawler: ${normalizedPath} (${userAgent.substring(0, 50)})`);
-  //     return res.sendFile(prerenderedPath);
-  //   }
-  // }
-  
-  // Always serve root index.html for SPA routing (prerendering temporarily disabled)
-  // React Router will handle the client-side routing
+  // Serve prerendered snapshots to crawlers for SEO.
+  // Snapshots live under dist/__prerendered__/ and never replace the SPA shell,
+  // so a bad prerender degrades SEO but cannot blank the app for real users.
+  const userAgent = req.get('user-agent') || '';
+  const isCrawler = /bot|crawler|spider|crawling|googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|sogou|exabot|facebot|ia_archiver|facebookexternalhit|twitterbot|linkedinbot|whatsapp|applebot|flipboard|tumblr|bitlybot|skypeuripreview|nuzzel|quora link preview|pinterest|slackbot|vkShare|W3C_Validator|redditbot/i.test(userAgent);
+
+  if (isCrawler) {
+    const prerenderedPath = resolve(prerenderPath, normalizedPath === '/' ? '.' : `.${normalizedPath}`, 'index.html');
+    // Keep the resolved path inside the snapshot directory (path traversal guard).
+    if (prerenderedPath.startsWith(prerenderPath) && existsSync(prerenderedPath)) {
+      console.log(`🤖 Serving prerendered to crawler: ${normalizedPath} (${userAgent.substring(0, 50)})`);
+      return res.sendFile(prerenderedPath);
+    }
+  }
+
+  // Everyone else gets the SPA shell; TanStack Router handles client-side routing.
   const indexPath = resolve(distPath, 'index.html');
   if (existsSync(indexPath)) {
     console.log(`📄 Serving root index.html for SPA routing: ${normalizedPath}`);

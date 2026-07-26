@@ -3,7 +3,7 @@ import rateLimit from '@fastify/rate-limit';
 import { processVoiceInput } from './service.js';
 import { getSession, deleteSession } from './session.js';
 import { requireAuthHook } from '../../plugins/authz.js';
-import { AppError } from '../../errors/AppError.js';
+import { AppError, isAppError } from '../../errors/AppError.js';
 
 const MAX_AUDIO_SIZE = Number(process.env.VOICE_AGENT_MAX_AUDIO_SIZE) || 10 * 1024 * 1024; // 10MB default
 
@@ -21,7 +21,7 @@ const voiceAgentRoutes: FastifyPluginAsync = async (app) => {
       }
       return `voice-agent:${req.ip || req.socket.remoteAddress || 'unknown'}`;
     },
-    errorResponseBuilder: (req, context) => {
+    errorResponseBuilder: (_req, context) => {
       return {
         success: false,
         error: 'Rate limit exceeded',
@@ -97,7 +97,7 @@ const voiceAgentRoutes: FastifyPluginAsync = async (app) => {
           .type('audio/mpeg')
           .send(result.audioBuffer);
       } catch (error) {
-        if (error.isAppError) {
+        if (isAppError(error)) {
           throw error;
         }
         app.log.error(error, 'Error processing voice input');

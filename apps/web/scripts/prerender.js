@@ -7,9 +7,20 @@ import { dirname, join, resolve } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const routes = ["/", "/login"];
+// Only genuinely public, crawlable routes belong here.
+// Do NOT add auth routes (e.g. /login): their beforeLoad always throws a redirect,
+// so the snapshot would just be whatever page they bounce to.
+const routes = ["/", "/subscribe"];
+
+// The DOM id that src/main.tsx mounts the React tree into.
+const MOUNT_ID = "app";
+
 const distPath = resolve(__dirname, "../dist");
 const indexPath = join(distPath, "index.html");
+
+// Snapshots live in their own directory and are served only to crawlers (see server.js).
+// dist/index.html is deliberately left untouched so a bad snapshot can never blank the SPA.
+const prerenderDir = join(distPath, "__prerendered__");
 
 if (!existsSync(indexPath)) {
   console.error("❌ Build output not found. Please run 'vite build' first.");
@@ -61,69 +72,55 @@ function createStaticServer(distPath, port) {
   });
 }
 
+function resolveChromePath() {
+  try {
+    const bundled = puppeteer.executablePath();
+    if (existsSync(bundled)) return bundled;
+  } catch {
+    // fall through to system locations
+  }
+
+  const possiblePaths = [
+    process.env.PUPPETEER_EXECUTABLE_PATH,
+    process.env.CHROME_PATH,
+    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+    "/usr/bin/chromium",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/google-chrome",
+    "/usr/bin/google-chrome-stable",
+  ].filter(Boolean);
+
+  for (const path of possiblePaths) {
+    if (existsSync(path)) {
+      console.log(`📦 Using system Chrome/Chromium: ${path}`);
+      return path;
+    }
+  }
+
+  console.error("❌ Chrome/Chromium not found!");
+  console.error("\nInstall it with one of:");
+  console.error("  npx puppeteer browsers install chrome");
+  console.error("  OR set PUPPETEER_EXECUTABLE_PATH / CHROME_PATH");
+  process.exit(1);
+}
+
 async function prerender() {
   const port = 4174; // Use a different port than preview
   const server = await createStaticServer(distPath, port);
   const baseUrl = `http://localhost:${port}`;
 
-  // Try to find Chrome/Chromium executable
-  let executablePath;
-  try {
-    // Try to use the Chromium bundled with puppeteer
-    executablePath = puppeteer.executablePath();
-    if (!existsSync(executablePath)) {
-      throw new Error("Bundled Chromium not found");
-    }
-  } catch (error) {
-    // If that fails, try common Chrome/Chromium locations
-    const possiblePaths = [
-      // Windows paths
-      "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-      "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-      // Linux paths
-      "/usr/bin/chromium",
-      "/usr/bin/chromium-browser",
-      "/usr/bin/google-chrome",
-      "/usr/bin/google-chrome-stable",
-      // Environment variable
-      process.env.CHROME_PATH,
-      process.env.PUPPETEER_EXECUTABLE_PATH,
-    ].filter(Boolean);
-
-    for (const path of possiblePaths) {
-      if (existsSync(path)) {
-        executablePath = path;
-        console.log(`📦 Using system Chrome/Chromium: ${path}`);
-        break;
-      }
-    }
-
-    if (!executablePath) {
-      console.error("❌ Chrome/Chromium not found!");
-      console.error("\nPlease install Chrome/Chromium by running one of the following:");
-      console.error("  npx puppeteer browsers install chrome");
-      console.error("  OR");
-      console.error("  Install Google Chrome and set CHROME_PATH environment variable");
-      process.exit(1);
-    }
-  }
-
   const launchOptions = {
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    executablePath: resolveChromePath(),
   };
-
-  if (executablePath) {
-    launchOptions.executablePath = executablePath;
-  }
 
   let browser;
   try {
     browser = await puppeteer.launch(launchOptions);
   } catch (error) {
     console.error("❌ Failed to launch browser:", error.message);
-    console.error("\nPlease install Chrome/Chromium by running:");
-    console.error("  npx puppeteer browsers install chrome");
     process.exit(1);
   }
 
@@ -132,65 +129,61 @@ async function prerender() {
       console.log(`📄 Pre-rendering route: ${route}`);
 
       const page = await browser.newPage();
-
-      // Set viewport
       await page.setViewport({ width: 1920, height: 1080 });
 
-      // Navigate to the route
-      await page.goto(`${baseUrl}${route}`, {
-        waitUntil: "networkidle0",
-      });
+      await page.goto(`${baseUrl}${route}`, { waitUntil: "networkidle0" });
 
-      // Wait for render-complete event or timeout after 3 seconds
+      // Wait for the app's render-complete signal, with a bounded fallback.
       await Promise.race([
-        page.evaluate(() => {
-          return new Promise((resolve) => {
-            const handler = () => {
-              document.removeEventListener("render-complete", handler);
-              resolve();
-            };
-            document.addEventListener("render-complete", handler);
-            // Fallback timeout
-            setTimeout(resolve, 2000);
-          });
-        }),
+        page.evaluate(
+          () =>
+            new Promise((resolve) => {
+              const handler = () => {
+                document.removeEventListener("render-complete", handler);
+                resolve();
+              };
+              document.addEventListener("render-complete", handler);
+              setTimeout(resolve, 2000);
+            })
+        ),
         new Promise((resolve) => setTimeout(resolve, 3000)),
       ]);
 
-      // Get the rendered HTML
-      const html = await page.content();
-
-      // Fix asset paths - use absolute paths from root so they work from any directory
-      const fixedHtml = html
-        .replace(new RegExp(`${baseUrl}`, "g"), "")
-        // Fix relative asset paths to be absolute from root
-        .replace(/href="\.\//g, 'href="/')
-        .replace(/src="\.\//g, 'src="/')
-        .replace(/href="assets\//g, 'href="/assets/')
-        .replace(/src="assets\//g, 'src="/assets/')
-        // Fix any other relative paths
-        .replace(/href="([^"]*)\/([^\/"]+)"/g, (match, path, file) => {
-          // If it's a relative path starting with /, keep it
-          if (path.startsWith('/')) return match;
-          // Otherwise make it absolute
-          return `href="/${path}/${file}"`;
-        });
-
-      // Save to appropriate path
-      if (route === "/") {
-        writeFileSync(indexPath, fixedHtml);
-        console.log(`✅ Pre-rendered: ${route} -> index.html`);
-      } else {
-        const routePath = join(distPath, route);
-        mkdirSync(routePath, { recursive: true });
-        writeFileSync(join(routePath, "index.html"), fixedHtml);
-        console.log(`✅ Pre-rendered: ${route} -> ${route}/index.html`);
+      // Guard against shipping an empty snapshot — writing one of these over
+      // index.html is what produced the blank pages that disabled prerendering.
+      // MOUNT_ID must match the element main.tsx renders into.
+      const rootLength = await page.evaluate(
+        (id) => document.getElementById(id)?.innerHTML.trim().length ?? -1,
+        MOUNT_ID
+      );
+      if (rootLength < 0) {
+        throw new Error(
+          `Route ${route}: mount element #${MOUNT_ID} not found. ` +
+            `Has the mount point in src/main.tsx changed?`
+        );
       }
+      if (rootLength < 200) {
+        throw new Error(
+          `Route ${route} rendered an essentially empty #${MOUNT_ID} (${rootLength} chars). ` +
+            `Refusing to write a blank snapshot.`
+        );
+      }
+
+      const html = await page.content();
+      // Vite emits absolute /assets/... URLs, so only the local origin needs stripping.
+      const fixedHtml = html.replaceAll(baseUrl, "");
+
+      const outDir = route === "/" ? prerenderDir : join(prerenderDir, route);
+      mkdirSync(outDir, { recursive: true });
+      writeFileSync(join(outDir, "index.html"), fixedHtml);
+      console.log(
+        `✅ Pre-rendered: ${route} -> __prerendered__${route === "/" ? "" : route}/index.html (${rootLength} chars)`
+      );
 
       await page.close();
     }
 
-    console.log("✨ Pre-rendering complete!");
+    console.log("✨ Pre-rendering complete! (dist/index.html left untouched)");
   } catch (error) {
     console.error("❌ Pre-rendering failed:", error);
     process.exit(1);
@@ -201,4 +194,3 @@ async function prerender() {
 }
 
 prerender();
-

@@ -72,12 +72,6 @@ export function AdminHomepage() {
                     {t("admin.goToAdminDashboard")}
                   </Button>
                 </Link>
-                <Link to="/admin/api-keys">
-                  <Button variant="outline" size="lg">
-                    <Settings className="mr-2 h-4 w-4" />
-                    {t("admin.manageApiKeys")}
-                  </Button>
-                </Link>
               </div>
             </CardContent>
           </Card>

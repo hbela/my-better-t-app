@@ -25,7 +25,9 @@ import SignInForm from "@/components/sign-in-form";
 
 export const Route = createFileRoute("/connect")({
   component: ConnectLandingPage,
-  validateSearch: (search: Record<string, unknown>) => {
+  validateSearch: (
+    search: Record<string, unknown>
+  ): { orgId?: string; domain?: string; orgSlug?: string } => {
     return {
       // Allow orgId directly (from wellness_external.html) or domain for lookup
       orgId: (search.orgId as string) || undefined,

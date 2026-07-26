@@ -224,7 +224,7 @@ export default fp(async (fastify: FastifyInstance) => {
       const deepLink = `bookingapp://org?orgId=${finalOrgId}&orgSlug=${
         org.slug || ""
       }`;
-      return reply.redirect(302, deepLink);
+      return reply.redirect(deepLink, 302);
     }
 
     // Resolve APK URL from R2
@@ -966,8 +966,10 @@ export default fp(async (fastify: FastifyInstance) => {
       throw new AppError("Organization not found", "ORG_NOT_FOUND", 404);
     }
 
-    // If QR code doesn't exist, generate it on-demand
-    if (!org.qrCodeKey) {
+    // If QR code doesn't exist, generate it on-demand.
+    // Tracked in a local because reassigning `org` below loses the non-null narrowing.
+    let qrCodeKey = org.qrCodeKey;
+    if (!qrCodeKey) {
       try {
         if (!bucket || !publicAppUrl) {
           throw new AppError(
@@ -999,6 +1001,7 @@ export default fp(async (fastify: FastifyInstance) => {
           where: { id },
           data: { qrCodeKey: key },
         });
+        qrCodeKey = key;
 
         fastify.log.info(
           `✅ QR code generated on-demand for organization: ${id}`
@@ -1018,7 +1021,7 @@ export default fp(async (fastify: FastifyInstance) => {
       const data = await s3.send(
         new GetObjectCommand({
           Bucket: bucket,
-          Key: org.qrCodeKey,
+          Key: qrCodeKey,
         })
       );
 
@@ -1045,7 +1048,7 @@ export default fp(async (fastify: FastifyInstance) => {
   // ------------------------
   // Debug endpoint to check PUBLIC_APP_URL (for troubleshooting)
   // ------------------------
-  fastify.get("/api/debug/public-app-url", async (req, reply) => {
+  fastify.get("/api/debug/public-app-url", async (_req, reply) => {
     return reply.send({
       success: true,
       data: {

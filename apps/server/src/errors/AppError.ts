@@ -13,3 +13,16 @@ export class AppError extends Error {
   }
 }
 
+/**
+ * Narrows an `unknown` caught value to AppError.
+ * Duck-typed on the `isAppError` flag rather than `instanceof`, so errors that
+ * cross bundle/realm boundaries are still recognised.
+ */
+export function isAppError(error: unknown): error is AppError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { isAppError?: unknown }).isAppError === true
+  );
+}
+

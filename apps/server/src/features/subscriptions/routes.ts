@@ -4,7 +4,7 @@ import crypto from "crypto";
 import Stripe from "stripe";
 import { requireAuthHook } from "../../plugins/authz";
 import { tryEnableOrganization } from "../../utils/organization-utils";
-import { AppError } from "../../errors/AppError";
+import { AppError, isAppError } from "../../errors/AppError";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-03-25.dahlia',
@@ -36,8 +36,8 @@ async function ensurePortalConfig(): Promise<string> {
     limit: 1,
   });
 
-  if (configs.length > 0) {
-    const existing = configs[0];
+  const existing = configs[0];
+  if (existing) {
     if (!existing.features.subscription_cancel?.enabled) {
       await stripe.billingPortal.configurations.update(existing.id, {
         features: { subscription_cancel: { enabled: true } },
@@ -242,7 +242,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (app) => {
           },
         });
       } catch (error: any) {
-        if (error.isAppError) {
+        if (isAppError(error)) {
           throw error;
         }
         app.log.error(error, "Error creating Stripe checkout session");
@@ -306,7 +306,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (app) => {
           },
         });
       } catch (error: any) {
-        if (error.isAppError) {
+        if (isAppError(error)) {
           throw error;
         }
         app.log.error(error, "Error creating Stripe portal session");
@@ -502,7 +502,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (app) => {
           },
         });
       } catch (error: any) {
-        if (error.isAppError) {
+        if (isAppError(error)) {
           throw error;
         }
         app.log.error(error, "Error syncing subscription from Stripe");

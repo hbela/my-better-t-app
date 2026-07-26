@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import prisma from "@booking-for-all/db";
 import crypto from "crypto";
-import { requireAuthHook, orgGuard } from "../../plugins/authz";
+import { requireAuthHook } from "../../plugins/authz";
 import { AppError } from "../../errors/AppError";
 import { sendBookingConfirmationEmails } from "../../utils/booking-email-utils";
 
@@ -231,10 +231,13 @@ const clientRoutes: FastifyPluginAsync = async (app) => {
     "/bookings",
     { preValidation: [requireAuthHook] },
     async (req, reply) => {
+      // Declared outside the try so the catch block below can still reference it
+      // (a `let` inside `try` is not in scope in `catch`).
+      let eventIdForError: string | undefined;
       try {
         const user = req.user;
         const { eventId } = (req.body as any) || {};
-        let eventIdForError: string | undefined = eventId; // Store for error handling
+        eventIdForError = eventId; // Store for error handling
 
         if (!eventId) {
           throw new AppError("eventId is required", "VALIDATION_ERROR", 400);

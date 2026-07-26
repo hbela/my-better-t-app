@@ -3,7 +3,7 @@ import { authClient } from "@/lib/auth-client";
 import { apiFetch } from "@/lib/apiFetch";
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { org?: string } => ({
     org: (search.org as string) || undefined,
   }),
   beforeLoad: async ({ search }) => {
@@ -52,13 +52,13 @@ export const Route = createFileRoute("/login")({
       const hasClient = memberships.some((m: any) => m.role === "CLIENT");
 
       if (hasOwner) {
-        throw redirect({ to: "/owner/" });
+        throw redirect({ to: "/owner" });
       }
       if (hasProvider) {
-        throw redirect({ to: "/provider/" });
+        throw redirect({ to: "/provider" });
       }
       if (hasClient) {
-        throw redirect({ to: "/client/" });
+        throw redirect({ to: "/client" });
       }
     } catch (error) {
       // Re-throw TanStack Router redirects
@@ -70,14 +70,14 @@ export const Route = createFileRoute("/login")({
 
     // Fallback: use global User.role
     if (user.role === "OWNER") {
-      throw redirect({ to: "/owner/" });
+      throw redirect({ to: "/owner" });
     }
     if (user.role === "PROVIDER") {
-      throw redirect({ to: "/provider/" });
+      throw redirect({ to: "/provider" });
     }
 
     // CLIENT or unknown → client dashboard
-    throw redirect({ to: "/client/" });
+    throw redirect({ to: "/client" });
   },
   component: () => null,
 });

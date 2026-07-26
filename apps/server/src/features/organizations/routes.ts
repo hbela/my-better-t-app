@@ -65,7 +65,6 @@ const organizationsRoutes: FastifyPluginAsync = async (app) => {
 
   app.get('/my-organizations', { preValidation: [requireAuthHook] }, async (req, reply) => {
     try {
-      // @ts-expect-error
       const user = req.user;
       
       // Return organizations where the user is a member (for owners, this returns their owned orgs)

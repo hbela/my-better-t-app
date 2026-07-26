@@ -1,6 +1,6 @@
 name: php-endpoint
 type: php
-repository: https://github.com/hbela/my-better-t-app.git
+repository: https://github.com/hbela/booking-for-all.git
 branch: main
 root_directory: .
 php:

@@ -1,10 +1,10 @@
 import type { FastifyPluginAsync } from 'fastify';
 import prisma from '@booking-for-all/db';
-import { captureException, captureMessage } from '../../instrument';
+import { captureException } from '../../instrument';
 
 const debugRoutes: FastifyPluginAsync = async (app) => {
   // Debug endpoint to list all registered routes
-  app.get('/routes', async (_req, reply) => {
+  app.get('/routes', async (_req, _reply) => {
     const routes: any[] = [];
     app.printRoutes().split('\n').forEach((line) => {
       if (line.trim()) {

@@ -12,29 +12,31 @@ export default fp(async (fastify: FastifyInstance) => {
 
   // Synchronous translation function (for most use cases)
   // Languages are loaded on-demand in the background
-  fastify.decorate("t", (key: string, options?: { lng?: string; [key: string]: any }) => {
+  fastify.decorate("t", (key: string, options?: { lng?: string; [key: string]: any }): string => {
+    // Captured into a local so the narrowing survives into the callbacks below.
+    const lng = options?.lng;
     // If a specific language is requested, ensure it's loaded
-    if (options?.lng && !loadedLanguages.has(options.lng)) {
+    if (lng && !loadedLanguages.has(lng)) {
       // Check if language is supported before loading
-      if (supportedLanguages.includes(options.lng as any)) {
+      if (supportedLanguages.includes(lng as any)) {
         // Check if already loading
-        let loadPromise = loadingPromises.get(options.lng);
+        let loadPromise = loadingPromises.get(lng);
         if (!loadPromise) {
           // Start loading in background (fire and forget)
-          loadPromise = i18n.loadLanguages([options.lng]).then(() => {
-            loadedLanguages.add(options.lng);
-            loadingPromises.delete(options.lng);
+          loadPromise = i18n.loadLanguages([lng]).then(() => {
+            loadedLanguages.add(lng);
+            loadingPromises.delete(lng);
           }).catch(() => {
-            loadingPromises.delete(options.lng);
+            loadingPromises.delete(lng);
           });
-          loadingPromises.set(options.lng, loadPromise);
+          loadingPromises.set(lng, loadPromise);
         }
         // Note: First call might use fallback language, but subsequent calls will work
         // For critical paths (like email sending), use ensureLanguageLoaded() first
       }
     }
     // Return translation immediately (may use fallback on first call if language not yet loaded)
-    return i18n.t(key, options || {});
+    return i18n.t(key, options || {}) as string;
   });
 
   // Async helper to ensure a language is loaded before translating (for critical paths)
@@ -55,7 +57,7 @@ export default fp(async (fastify: FastifyInstance) => {
     }
   });
 
-  fastify.addHook("onRequest", async (request: FastifyRequest, reply) => {
+  fastify.addHook("onRequest", async (request: FastifyRequest, _reply) => {
     // Try to get language from cookie
     let lang: string | undefined;
     

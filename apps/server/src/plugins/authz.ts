@@ -1,16 +1,13 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { auth } from '@booking-for-all/auth';
 import prisma from '@booking-for-all/db';
-import { AppError } from '../errors/AppError';
 
 export async function requireAuthHook(request: FastifyRequest, reply: FastifyReply) {
   const session = await auth.api.getSession({ headers: request.headers as any });
   if (!session) {
     return reply.status(401).send({ error: 'Unauthorized' });
   }
-  // @ts-expect-error augment at runtime
   request.user = session.user;
-  // @ts-expect-error augment at runtime
   request.session = session.session;
   
   // Send mobile app notification email (one-time, after app launch)
@@ -40,7 +37,6 @@ export async function requireAuthHook(request: FastifyRequest, reply: FastifyRep
  * Attaches organization context (id, role, organization) to request
  */
 export async function orgGuard(request: FastifyRequest, reply: FastifyReply) {
-  // @ts-expect-error populated by requireAuthHook
   const user = request.user;
   if (!user) {
     return reply.status(401).send({ error: 'Unauthenticated' });
@@ -81,7 +77,6 @@ export async function orgGuard(request: FastifyRequest, reply: FastifyReply) {
   }
 
   // Attach organization context to request
-  // @ts-expect-error augment at runtime
   request.organization = {
     id: member.organizationId,
     role: member.role, // ✅ Role from Member model
@@ -94,7 +89,6 @@ export async function orgGuard(request: FastifyRequest, reply: FastifyReply) {
  * Must be called after requireAuthHook
  */
 export async function requireAdminHook(request: FastifyRequest, reply: FastifyReply) {
-  // @ts-expect-error populated by requireAuthHook
   const user = request.user;
   if (!user || !user.isSystemAdmin) {
     return reply.status(403).send({ error: 'Forbidden - Admin access required' });
@@ -107,7 +101,6 @@ export async function requireAdminHook(request: FastifyRequest, reply: FastifyRe
  */
 export function requireOrgRole(roles: string[]) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
-    // @ts-expect-error populated by orgGuard
     const organization = request.organization;
     
     if (!organization) {
@@ -127,7 +120,6 @@ export function requireOrgRole(roles: string[]) {
  * Org-level membership is verified inside each route handler.
  */
 export async function requireOwnerHook(request: FastifyRequest, reply: FastifyReply) {
-  // @ts-expect-error populated by requireAuthHook
   const user = request.user;
   if (!user) {
     return reply.status(401).send({ error: 'Unauthorized' });
@@ -138,7 +130,6 @@ export async function requireOwnerHook(request: FastifyRequest, reply: FastifyRe
 }
 
 export async function requireProviderHook(request: FastifyRequest, reply: FastifyReply) {
-  // @ts-expect-error populated by requireAuthHook
   const user = request.user;
   const providerId = (request.body as any)?.providerId || (request.params as any)?.providerId;
   if (providerId) {
@@ -146,13 +137,11 @@ export async function requireProviderHook(request: FastifyRequest, reply: Fastif
     if (!provider || provider.userId !== user.id) {
       return reply.status(403).send({ error: 'Forbidden - Only the provider can perform this action' });
     }
-    // @ts-expect-error attach for handlers
     request.provider = provider;
   }
 }
 
 export async function requireEnabledOrganizationHook(request: FastifyRequest, reply: FastifyReply) {
-  // @ts-expect-error use narrow type
   const organizationId = (request.body as any)?.organizationId || (request.params as any)?.organizationId || (request.query as any)?.organizationId;
   if (!organizationId) {
     return reply.status(400).send({ error: 'Organization ID required' });
@@ -194,7 +183,6 @@ export async function validateApiKeyHook(request: FastifyRequest, reply: Fastify
   // Note: We don't check if organization is enabled here because owners need to access
   // the system through external apps to subscribe and enable their organization
   // Enabled check should be enforced at the booking/client feature level instead
-  // @ts-expect-error augment instance
   request.organizationId = organizationId;
   // @ts-expect-error augment instance
   request.organization = organization;

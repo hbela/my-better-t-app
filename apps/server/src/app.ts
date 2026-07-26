@@ -232,13 +232,16 @@ export function buildApp() {
   app.addContentTypeParser(
     "application/json",
     { parseAs: "string" },
-    (req, body, done) => {
+    (_req, body, done) => {
       try {
+        // Fastify types the payload as string | Buffer even with parseAs: "string",
+        // so normalise before parsing.
+        const raw = typeof body === "string" ? body : body.toString("utf8");
         // If body is empty, return empty object instead of throwing error
-        if (!body || body.trim() === "") {
+        if (!raw || raw.trim() === "") {
           return done(null, {});
         }
-        const json = JSON.parse(body);
+        const json = JSON.parse(raw);
         done(null, json);
       } catch (err) {
         done(err as Error, undefined);

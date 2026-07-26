@@ -3,11 +3,11 @@
 ## Prerequisites
 - Hetzner VPS is reachable and has DNS A records for `api.appointer.hu`, `app.appointer.hu`, `legacy.appointer.hu`, and `landing.appointer.hu` pointing to the server IP.
 - Coolify is installed and you can log in as an administrator.
-- GitHub deploy key or personal access token with read access to `hbela/my-better-t-app` is configured inside Coolify (Settings -> Git providers).
+- GitHub deploy key or personal access token with read access to `hbela/booking-for-all` is configured inside Coolify (Settings -> Git providers).
 - A production PostgreSQL instance is available (Coolify can provision one under Resources -> Database -> Add -> PostgreSQL) and you have the connection string.
 
 ## 1. Prepare the Repository
-1. Clone the repository to a workstation with Node 20+ and PNPM 10+: `git clone https://github.com/hbela/my-better-t-app.git && cd my-better-t-app`.
+1. Clone the repository to a workstation with Node 20+ and PNPM 10+: `git clone https://github.com/hbela/booking-for-all.git && cd booking-for-all`.
 2. Make sure the Turbo cache is up to date by running `pnpm install` once locally.
 3. Run a production smoke build (and ensure Prisma Client artifacts are available):
    - `pnpm --filter @booking-for-all/db exec prisma generate --no-engine`
@@ -32,11 +32,11 @@ Add the following variables in Coolify -> Project -> Environment. Use the same v
 | `RESEND_API_KEY` | Yes | Resend transactional email API key.
 | `RESEND_FROM_EMAIL` | Yes | Default sender (for example `support@appointer.hu`).
 | `PHP_SERVER_URL` | Yes | URL of the PHP legacy endpoint (`https://legacy.appointer.hu`).
-| `POLAR_ACCESS_TOKEN` | Conditional | Required if Polar subscriptions are active.
-| `POLAR_PRODUCT_ID` | Conditional | Polar product identifier used in subscription flows.
-| `POLAR_WEBHOOK_SECRET` | Conditional | Needed if receiving Polar webhooks.
-| `POLAR_SUCCESS_URL` | Conditional | Overrides checkout redirect, defaults to `${CORS_ORIGIN}/owner`.
-| `POLAR_SANDBOX` | Optional | Set to `true` to use Polar sandbox.
+| `STRIPE_SECRET_KEY` | Conditional | Required for subscriptions/billing portal.
+| `STRIPE_WEBHOOK_SECRET` | Conditional | Verifies the `/webhooks/stripe` signature.
+| `STRIPE_PRICE_ID_MONTHLY` | Conditional | Price used for the monthly plan.
+| `STRIPE_PRICE_ID_YEARLY` | Conditional | Price used for the yearly plan.
+| `SITE_URL` | Recommended | Public web origin used to generate `sitemap.xml` at build time. **Without it the sitemap falls back to `https://webdev.appointer.hu`,** which would publish dev URLs to search engines.
 | `RATE_LIMIT_*` | Optional | Fine-tune external API rate limits (`RATE_LIMIT_MAX_REQUESTS`, etc.).
 | `LOG_LEVEL` | Optional | Defaults to `info`.
 | `S3_ENDPOINT` | Conditional | S3-compatible storage endpoint (required for QR codes and file uploads). Get from Coolify S3 storage resource.
@@ -56,7 +56,7 @@ See `docs/coolify-s3-next-steps.md` for detailed instructions.
 ## 3. Create the Services in Coolify
 1. In Coolify, go to Projects -> select (or create) a project for Booking for All.
 2. Click Add New Service -> Application -> Git Repository.
-3. Fill in the repository (`https://github.com/hbela/my-better-t-app.git`), choose branch `main`, and set the root directory according to the service.
+3. Fill in the repository (`https://github.com/hbela/booking-for-all.git`), choose branch `main`, and set the root directory according to the service.
 4. For the API service select the Docker build pack and set Dockerfile path to `apps/server/Dockerfile` (added in this repo). This avoids Nixpacks on arm64 and runs the same pnpm/prisma commands via the Docker image.
 5. For the SPA (`apps/web`) you can now point the Docker build pack at `apps/web/Dockerfile`. The PHP and landing services can stay on the Git workflow with the commands from the YAML files (or use Dockerfiles if desired).
 6. Attach the environment group created in step 2, pick the desired CPU/RAM limits, and create the service. Repeat for each application above.
@@ -67,8 +67,14 @@ See `docs/coolify-s3-next-steps.md` for detailed instructions.
   - Start command runs `pnpm --filter server run start`; `HOST=0.0.0.0` is pre-configured.
   - Remember to enable HTTPS in Coolify (toggle Let's Encrypt once DNS is live).
 - **web (`app.appointer.hu`)**
-  - Build pipeline installs PNPM/Turbo, builds via Vite, then uses `vite preview` on port `4173` with host binding.
+  - Build pipeline installs PNPM/Turbo, then runs `vite build` + Puppeteer prerender + sitemap generation.
+  - Served by the Express server in `apps/web/server.js` on port `4173` (`pnpm --filter web run start`).
+    It serves static assets, `/sitemap.xml`, a `/health` endpoint, and the SPA fallback.
+  - Crawlers (matched by user-agent) get the prerendered snapshots from `dist/__prerendered__/`;
+    real users always get the untouched SPA shell, so a bad prerender cannot blank the app.
   - `VITE_SERVER_URL` points at the API domain so client requests resolve correctly.
+  - Note: do **not** switch back to `vite preview` — it is a dev server and additionally requires every
+    hostname to be listed in `allowedHosts` in `apps/web/vite.config.ts`.
 - **php-endpoint (`legacy.appointer.hu`)**
   - Document root defaults to the repository root; place legacy PHP scripts under `php/` or adjust `document_root` before redeploying.
   - If the PHP application needs environment variables, add them in Coolify under this service.
@@ -79,14 +85,14 @@ See `docs/coolify-s3-next-steps.md` for detailed instructions.
 ## 5. First Deployment
 1. Back in the project dashboard, trigger Deploy on the server service first. Wait until the container is healthy.
 2. Deploy the PHP service if required (ensures legacy endpoints are reachable).
-3. Deploy the landing and web services next. Static deployments finish quickly; the Vite preview service will keep running to serve the SPA.
+3. Deploy the landing and web services next. Static deployments finish quickly; the Express service keeps running to serve the SPA.
 4. Verify container logs via Coolify -> Deployment -> Logs. Check Fastify boot logs for database connection success and Prisma migrations.
 
 ## 6. Post-Deployment Checks
 - API health: `https://api.appointer.hu/health` should return 200 and indicate Prisma connected.
 - Web app: log into `https://app.appointer.hu` and exercise a booking flow.
 - Emails: trigger a password reset and confirm the message arrives via Resend.
-- Subscriptions (if Polar enabled): create a checkout and ensure the redirect URL works.
+- Subscriptions: create a Stripe checkout and confirm the redirect plus the `/webhooks/stripe` delivery.
 - Legacy PHP endpoint: call a known route to confirm the document root is correct.
 
 ## 7. Ongoing Operations

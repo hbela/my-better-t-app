@@ -6,7 +6,6 @@ import { sendBookingCancellationEmails } from '../../utils/booking-email-utils';
 
 const bookingsRoutes: FastifyPluginAsync = async (app) => {
   app.get('/', { preValidation: [requireAuthHook] }, async (req, reply) => {
-    // @ts-expect-error from auth hook
     const user = req.user;
     const bookings = await prisma.booking.findMany({
       where: { memberId: user.id },
@@ -57,7 +56,6 @@ const bookingsRoutes: FastifyPluginAsync = async (app) => {
   app.post('/', { preValidation: [requireAuthHook] }, async (req, reply) => {
     // Minimal placeholder; extend to match original logic
     const data = (req.body as any) || {};
-    // @ts-expect-error from auth hook
     const user = req.user;
     
     if (!data.eventId) {
@@ -84,7 +82,6 @@ const bookingsRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.delete('/:id', { preValidation: [requireAuthHook] }, async (req, reply) => {
-    // @ts-expect-error from auth hook
     const user = req.user;
     const { id } = req.params as { id: string };
 

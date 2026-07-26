@@ -53,8 +53,7 @@ export const googleOAuthPlugin = fp(async (fastify) => {
 
     // Use Better Auth's API method to initiate social sign-in
     const baseAuthUrl = process.env.BETTER_AUTH_URL || `${req.protocol}://${req.headers.host}`;
-    const callbackURL = `${baseAuthUrl}/api/auth/callback/google?orgId=${orgId}`;
-    
+
     // Use Better Auth's social sign-in endpoint to initiate OAuth
     // Better Auth's social OAuth is typically initiated client-side via redirect
     // We'll redirect directly to Better Auth's endpoint and store orgId in a cookie

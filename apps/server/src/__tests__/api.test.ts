@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect } from "vitest";
 import request from "supertest";
 
 const BASE_URL = "http://localhost:3000";
@@ -9,8 +9,6 @@ let ownerToken = "";
 let userId = "";
 let organizationId = "";
 let departmentId = "";
-let providerId = "";
-let eventId = "";
 let tempPassword = "";
 
 describe("Medisched API Tests", () => {

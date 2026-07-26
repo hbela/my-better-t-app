@@ -1,6 +1,5 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import request from "supertest";
-import { buildApp } from "../app.js";
 
 // Use environment variable or default to localhost
 const BASE_URL = process.env.TEST_SERVER_URL || "http://localhost:3000";

@@ -1,6 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
 import Calendar from "react-calendar";
-import type { Value } from "react-calendar/dist/cjs/shared/types";
+import type { CalendarProps } from "react-calendar";
+
+// react-calendar does not re-export its `Value` union from the package root, and
+// deep-importing `dist/**` breaks across versions. Derive it from onChange instead.
+type Value = Parameters<NonNullable<CalendarProps["onChange"]>>[0];
 import { format, isSameDay, startOfDay, type Locale } from "date-fns";
 import { enUS, hu, de } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -125,7 +129,7 @@ export function MobileCalendar({
         <Calendar
           onChange={handleCalendarChange}
           value={calendarValue}
-          locale={dateFnsLocale}
+          locale={currentLang}
           className="w-full rounded-lg border bg-card text-card-foreground shadow-sm"
           tileClassName={({ date, view, activeStartDate }) => {
             if (view === "month") {
@@ -213,7 +217,7 @@ export function MobileCalendar({
                 )} />
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-base">
-                    {format(event.start, "h:mm a", { locale: enUS })} - {format(event.end, "h:mm a", { locale: enUS })}
+                    {format(event.start, "p", { locale: dateFnsLocale })} - {format(event.end, "p", { locale: dateFnsLocale })}
                   </div>
                   {event.duration && (
                     <div className="text-sm text-muted-foreground">

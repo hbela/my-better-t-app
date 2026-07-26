@@ -101,7 +101,7 @@ export default async function memberRoutes(fastify: FastifyInstance) {
           })),
         });
       } catch (error) {
-        fastify.log.error("Error fetching user organizations:", error);
+        fastify.log.error(error, "Error fetching user organizations");
         return reply.status(500).send({
           success: false,
           code: "ORGANIZATIONS_FETCH_FAILED",
@@ -206,7 +206,7 @@ export default async function memberRoutes(fastify: FastifyInstance) {
           message: "Member created successfully",
         });
       } catch (error) {
-        fastify.log.error("Error ensuring member:", error);
+        fastify.log.error(error, "Error ensuring member");
         return reply.status(500).send({
           success: false,
           code: "MEMBER_ENSURE_FAILED",

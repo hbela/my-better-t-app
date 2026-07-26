@@ -8,5 +8,10 @@
 			"@/*": ["./src/*"]
 		},
 		"jsx": "react-jsx"
-	}
+	},
+	// Only the app itself is type-checked. The ad-hoc password/ngrok utilities at the
+	// package root are one-off operator scripts, not part of the build (see tsdown.config.ts,
+	// whose entry is src/server.ts) and they violate rootDir by reaching into packages/db.
+	"include": ["src/**/*"],
+	"exclude": ["dist", "node_modules"]
 }
