@@ -4,7 +4,13 @@ import prisma from "@booking-for-all/db";
 import { organization, admin, apiKey } from "better-auth/plugins";
 
 // Log environment (loaded by server's dotenv/config)
-console.log("🔐 Auth Package - DATABASE_URL:", process.env.DATABASE_URL);
+// Never log DATABASE_URL itself: in deployed environments it is an Accelerate
+// URL whose api_key is a live credential, and these lines go to the container
+// log stream.
+console.log(
+  "🔐 Auth Package - DATABASE_URL:",
+  process.env.DATABASE_URL ? "Set" : "Not set"
+);
 console.log(
   "🔐 Auth Package - BETTER_AUTH_SECRET:",
   process.env.BETTER_AUTH_SECRET ? "Set" : "Not set"
