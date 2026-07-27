@@ -58,13 +58,11 @@ $env:DATABASE_URL="postgres://your-direct-connection-string"  # Can be same as D
 node scripts/deploy-migrations.mjs
 ```
 
-**Alternative**: If you prefer to run Prisma directly, you need to copy migrations to the expected location first:
+**Alternative**: If you prefer to run Prisma directly:
 
 ```powershell
-# Copy migrations to where Prisma expects them (relative to schema)
-Copy-Item -Path "prisma\migrations" -Destination "prisma\schema\migrations" -Recurse
-
-# Then run migrate deploy
+# Migrations already live at prisma/schema/migrations, where Prisma resolves
+# them relative to the schema file. No copying is needed.
 $env:DATABASE_URL="postgres://..."
 $env:DIRECT_URL="postgres://..."
 npx prisma migrate deploy --schema=./prisma/schema/schema.prisma

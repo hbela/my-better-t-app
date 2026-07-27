@@ -8,7 +8,6 @@
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
-import { existsSync, cpSync } from 'fs';
 import dotenv from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -35,15 +34,11 @@ console.log('📋 Deploying Prisma migrations...');
 console.log('');
 
 try {
-  // Ensure migrations are in the expected location (relative to schema)
-  const migrationsSource = resolve(__dirname, '../prisma/migrations');
-  const migrationsTarget = resolve(__dirname, '../prisma/schema/migrations');
-  
-  if (!existsSync(migrationsTarget) && existsSync(migrationsSource)) {
-    console.log('📁 Copying migrations to expected location...');
-    cpSync(migrationsSource, migrationsTarget, { recursive: true });
-  }
-  
+  // Migrations live at prisma/schema/migrations, resolved by Prisma relative to
+  // the schema file. This script used to copy them there from a second copy at
+  // prisma/migrations; that duplicate has been removed, since it silently drifted
+  // out of date and shadowed the real one.
+
   // Run migrate deploy with explicit schema path
   const schemaPath = resolve(__dirname, '../prisma/schema/schema.prisma');
   

@@ -82,7 +82,7 @@ All commands use the custom schema path: `./prisma/schema/schema.prisma` (instea
 # 2. Run migration - this CREATES the migration file
 npm run db:migrate
 # 3. Enter migration name when prompted (e.g., "add_user_email_field")
-# 4. Migration file is created in prisma/migrations/ and applied automatically
+# 4. Migration file is created in prisma/schema/migrations/ and applied automatically
 ```
 
 **⚠️ Important**: 
@@ -107,7 +107,7 @@ npm run db:migrate
 - When you accidentally applied a migration to the wrong database and need to apply it to the correct one
 
 **What it does**:
-1. Reads migration files from `prisma/migrations/` directory
+1. Reads migration files from `prisma/schema/migrations/` directory
 2. Checks which migrations have already been applied to the target database
 3. Applies only pending migrations in order
 4. **Does NOT create new migrations** (unlike `db:migrate`)
@@ -130,7 +130,7 @@ npm run db:migrate:deploy
 
 **⚠️ Important**: 
 - This is a **read-only operation on migration files** - it only applies, never creates
-- Only applies existing migrations that are in `prisma/migrations/`
+- Only applies existing migrations that are in `prisma/schema/migrations/`
 - Safe for production use
 - Uses whatever database connection is in your environment variables
 - **If you need to create a new migration, use `db:migrate` instead**
@@ -151,13 +151,20 @@ npm run db:migrate:deploy
 - Compares migration files with database migration history
 - Shows which migrations have been applied
 - Shows which migrations are pending
-- Detects drift (schema differences not covered by migrations)
+- Reports migrations that were modified after being applied
+
+**What it does NOT do**: it does not compare `schema.prisma` against the actual
+database, so it cannot see changes applied with `db:push`. A database can report
+"up to date" while still missing columns that only exist in the schema. To check
+for that, use `prisma migrate diff --from-migrations ./prisma/schema/migrations
+--to-schema-datamodel ./prisma/schema/schema.prisma --shadow-database-url <scratch db>`;
+an empty result means the migrations fully reproduce the schema.
 
 **Output example**:
 ```
 ✅ Database is up to date!
-✅ 3 migrations found in prisma/migrations
-✅ 3 migrations applied to database
+✅ 8 migrations found in prisma/migrations
+✅ 8 migrations applied to database
 ```
 
 ---
