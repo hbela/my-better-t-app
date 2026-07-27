@@ -8,6 +8,7 @@ build:
   command: |
     npm install -g pnpm turbo
     pnpm install
+    pnpm --filter @booking-for-all/db run db:migrate:deploy
     pnpm --filter @booking-for-all/db run db:generate:prod
     pnpm turbo run build --filter=server
 start:
@@ -18,8 +19,18 @@ environment:
   NODE_ENV: development
   PORT: 3000
   HOST: 0.0.0.0
+  # DATABASE_URL is the Accelerate URL used by Prisma Client at runtime.
+  # DIRECT_URL is the plain postgresql:// connection and is required by the
+  # db:migrate:deploy build step — migrations cannot run through Accelerate.
   DATABASE_URL: ${DATABASE_URL}
+  DIRECT_URL: ${DIRECT_URL}
   BETTER_AUTH_URL: https://apidev.appointer.hu
+  # Google OAuth. Better Auth registers the provider with
+  # enabled: !!(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET), so if either is
+  # missing the provider is silently disabled and sign-in/social returns
+  # PROVIDER_NOT_FOUND rather than a configuration error.
+  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+  GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
   CORS_ORIGIN: https://webdev.appointer.hu
   FRONTEND_URL: https://webdev.appointer.hu
   PHP_SERVER_URL: https://phpdev.appointer.hu
@@ -30,6 +41,12 @@ environment:
   S3_SECRET_KEY: ${S3_SECRET_KEY}
   S3_BUCKET: ${S3_BUCKET}
   PUBLIC_APP_URL: https://apidev.appointer.hu
+  # Stripe (optional — the server boots without these, but billing routes
+  # return PAYMENT_NOT_CONFIGURED until they are set)
+  STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+  STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+  STRIPE_PRICE_ID_MONTHLY: ${STRIPE_PRICE_ID_MONTHLY}
+  STRIPE_PRICE_ID_YEARLY: ${STRIPE_PRICE_ID_YEARLY}
   # R2 Configuration (Cloudflare R2 - fallback for APK files)
   R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
   R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
