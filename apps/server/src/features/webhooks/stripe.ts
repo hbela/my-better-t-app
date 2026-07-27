@@ -1,12 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
 import prisma from '@booking-for-all/db';
 import crypto from 'crypto';
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
 import { tryEnableOrganization } from '../../utils/organization-utils';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-03-25.dahlia',
-});
+import { getStripe } from '../../utils/stripe-client';
 
 async function ensureProduct(stripeProductId: string, name?: string, amount?: number, currency?: string) {
   let product = await prisma.product.findUnique({ where: { stripeProductId } });
@@ -52,7 +49,7 @@ const stripeWebhook: FastifyPluginAsync = async (app) => {
 
       let event: Stripe.Event;
       try {
-        event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+        event = getStripe().webhooks.constructEvent(rawBody, signature, webhookSecret);
       } catch (err) {
         app.log.warn({ err }, 'Invalid Stripe webhook signature');
         return reply.status(401).send({ error: 'Invalid signature' });
@@ -127,7 +124,7 @@ async function handleCheckoutCompleted(app: any, session: Stripe.Checkout.Sessio
   let stripeCurrency: string | undefined;
   if (stripeSubscriptionId) {
     try {
-      const stripeSub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+      const stripeSub = await getStripe().subscriptions.retrieve(stripeSubscriptionId);
       // In newer Stripe API, period dates are on items
       const firstItem = stripeSub.items?.data?.[0];
       if (firstItem) {

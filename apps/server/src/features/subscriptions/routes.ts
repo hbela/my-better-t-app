@@ -1,14 +1,11 @@
 import type { FastifyPluginAsync } from "fastify";
 import prisma from "@booking-for-all/db";
 import crypto from "crypto";
-import Stripe from "stripe";
+import type Stripe from "stripe";
 import { requireAuthHook } from "../../plugins/authz";
 import { tryEnableOrganization } from "../../utils/organization-utils";
+import { getStripe } from "../../utils/stripe-client";
 import { AppError, isAppError } from "../../errors/AppError";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-03-25.dahlia',
-});
 
 let cachedPortalConfigId: string | null = null;
 
@@ -19,9 +16,9 @@ async function ensurePortalConfig(): Promise<string> {
 
   if (pinnedId) {
     // Verify the pinned config has subscription_cancel enabled; patch if not.
-    const existing = await stripe.billingPortal.configurations.retrieve(pinnedId);
+    const existing = await getStripe().billingPortal.configurations.retrieve(pinnedId);
     if (!existing.features.subscription_cancel?.enabled) {
-      await stripe.billingPortal.configurations.update(pinnedId, {
+      await getStripe().billingPortal.configurations.update(pinnedId, {
         features: { subscription_cancel: { enabled: true } },
       });
     }
@@ -31,7 +28,7 @@ async function ensurePortalConfig(): Promise<string> {
 
   // Use the existing Dashboard default config so all configured features are preserved.
   // Patch subscription_cancel on it if not already enabled.
-  const { data: configs } = await stripe.billingPortal.configurations.list({
+  const { data: configs } = await getStripe().billingPortal.configurations.list({
     is_default: true,
     limit: 1,
   });
@@ -39,7 +36,7 @@ async function ensurePortalConfig(): Promise<string> {
   const existing = configs[0];
   if (existing) {
     if (!existing.features.subscription_cancel?.enabled) {
-      await stripe.billingPortal.configurations.update(existing.id, {
+      await getStripe().billingPortal.configurations.update(existing.id, {
         features: { subscription_cancel: { enabled: true } },
       });
     }
@@ -48,7 +45,7 @@ async function ensurePortalConfig(): Promise<string> {
   }
 
   // No default config exists — create a baseline one.
-  const created = await stripe.billingPortal.configurations.create({
+  const created = await getStripe().billingPortal.configurations.create({
     business_profile: { headline: 'Manage your subscription' },
     features: {
       invoice_history: { enabled: true },
@@ -206,7 +203,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (app) => {
         const cancelUrl = `${frontendUrl}/owner?cancelled=true`;
 
         // Create Stripe Checkout Session
-        const session = await stripe.checkout.sessions.create({
+        const session = await getStripe().checkout.sessions.create({
           mode: "subscription",
           payment_method_types: ["card"],
           customer_email: user.email,
@@ -293,7 +290,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (app) => {
 
         const portalConfigId = await ensurePortalConfig();
 
-        const portalSession = await stripe.billingPortal.sessions.create({
+        const portalSession = await getStripe().billingPortal.sessions.create({
           customer: subscription.stripeCustomerId,
           return_url: `${frontendUrl}/owner`,
           configuration: portalConfigId,
@@ -356,7 +353,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (app) => {
         }
 
         // Search Stripe for completed checkout sessions with matching metadata
-        const sessions = await stripe.checkout.sessions.list({
+        const sessions = await getStripe().checkout.sessions.list({
           limit: 20,
         });
 
@@ -393,7 +390,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (app) => {
         let periodEnd: Date | null = null;
         if (stripeSubscriptionId) {
           try {
-            stripeSub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+            stripeSub = await getStripe().subscriptions.retrieve(stripeSubscriptionId);
             // In newer Stripe API, period dates are on items
             const firstItem = stripeSub.items?.data?.[0];
             if (firstItem) {
